@@ -37,6 +37,7 @@ public partial class App : Application
 
         _tray.Show();
         _mainWindow.ShowAndActivate();
+        _ = UpdateService.CheckForUpdatesAsync(_mainWindow);
     }
 
     private void StartRegionCapture()
