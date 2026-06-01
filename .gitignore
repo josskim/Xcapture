@@ -1,0 +1,9 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+Installer/XCaptureSetup*.exe
+Installer/XCaptureSetup*.zip
+publish-latest/
+doc/dotnet-sdk-*.exe
