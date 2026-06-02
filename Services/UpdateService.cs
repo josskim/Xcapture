@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
@@ -72,7 +73,8 @@ public static class UpdateService
             {
                 progressWindow.Show();
                 progressWindow.Activate();
-                await Task.Yield();
+                progressWindow.UpdateLayout();
+                await progressWindow.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
 
                 var installerPath = await DownloadInstallerAsync(downloadUrl, latestVersion);
                 progressWindow.Close();
@@ -130,7 +132,7 @@ public static class UpdateService
 
         panel.Children.Add(new TextBlock
         {
-            Text = $"업데이트 다운로드중...\n새 버전: {latestVersion}",
+            Text = $"업데이트 다운로드중...\n새 버전: {latestVersion}\n잠시만 기다려주세요.",
             FontSize = 15,
             FontWeight = FontWeights.SemiBold,
             Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(17, 24, 39)),
