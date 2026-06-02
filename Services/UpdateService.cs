@@ -4,6 +4,8 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
@@ -65,12 +67,28 @@ public static class UpdateService
                 return;
             }
 
-            var installerPath = await DownloadInstallerAsync(downloadUrl, latestVersion);
-            Process.Start(new ProcessStartInfo
+            var progressWindow = CreateDownloadProgressWindow(owner, latestVersion);
+            try
             {
-                FileName = installerPath,
-                UseShellExecute = true
-            });
+                progressWindow.Show();
+                progressWindow.Activate();
+                await Task.Yield();
+
+                var installerPath = await DownloadInstallerAsync(downloadUrl, latestVersion);
+                progressWindow.Close();
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = installerPath,
+                    UseShellExecute = true
+                });
+            }
+            finally
+            {
+                if (progressWindow.IsVisible)
+                {
+                    progressWindow.Close();
+                }
+            }
 
             Application.Current.Shutdown();
         }
@@ -100,6 +118,44 @@ public static class UpdateService
         }
 
         MessageBox.Show(owner, message, "XCapture 업데이트", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private static Window CreateDownloadProgressWindow(Window owner, Version latestVersion)
+    {
+        var panel = new StackPanel
+        {
+            Margin = new Thickness(22),
+            Orientation = System.Windows.Controls.Orientation.Vertical
+        };
+
+        panel.Children.Add(new TextBlock
+        {
+            Text = $"업데이트 다운로드중...\n새 버전: {latestVersion}",
+            FontSize = 15,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(17, 24, 39)),
+            Margin = new Thickness(0, 0, 0, 14)
+        });
+
+        panel.Children.Add(new System.Windows.Controls.ProgressBar
+        {
+            IsIndeterminate = true,
+            Height = 8,
+            Minimum = 0,
+            Maximum = 100
+        });
+
+        return new Window
+        {
+            Title = "XCapture 업데이트",
+            Owner = owner,
+            Content = panel,
+            Width = 360,
+            Height = 150,
+            ResizeMode = ResizeMode.NoResize,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            ShowInTaskbar = false
+        };
     }
 
     private static string? FindInstallerDownloadUrl(JsonElement releaseRoot)
