@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using XCapture.Services;
 using Brushes = System.Windows.Media.Brushes;
+using Button = System.Windows.Controls.Button;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 using Image = System.Windows.Controls.Image;
@@ -20,6 +21,7 @@ namespace XCapture.Windows;
 public partial class EditorWindow : Window
 {
     private readonly BitmapSource _originalImage;
+    private Button? _selectedColorButton;
 
     public EditorWindow(BitmapSource image)
     {
@@ -30,6 +32,7 @@ public partial class EditorWindow : Window
         CaptureImage.Height = image.PixelHeight;
         InkLayer.Width = image.PixelWidth;
         InkLayer.Height = image.PixelHeight;
+        SelectColorButton(RedSwatch);
         UpdateDrawingAttributes();
     }
 
@@ -43,8 +46,13 @@ public partial class EditorWindow : Window
         InkLayer.EditingMode = InkCanvasEditingMode.EraseByStroke;
     }
 
-    private void ColorBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void ColorSwatch_Click(object sender, RoutedEventArgs e)
     {
+        if (sender is Button button)
+        {
+            SelectColorButton(button);
+        }
+
         UpdateDrawingAttributes();
     }
 
@@ -55,9 +63,9 @@ public partial class EditorWindow : Window
 
     private void UpdateDrawingAttributes()
     {
-        if (InkLayer is null || ColorBox?.SelectedItem is not ComboBoxItem item) return;
+        if (InkLayer is null || _selectedColorButton?.Tag is not string colorValue) return;
 
-        var color = (Color)ColorConverter.ConvertFromString((string)item.Tag);
+        var color = (Color)ColorConverter.ConvertFromString(colorValue);
         InkLayer.DefaultDrawingAttributes = new DrawingAttributes
         {
             Color = color,
@@ -66,6 +74,19 @@ public partial class EditorWindow : Window
             FitToCurve = true,
             IgnorePressure = true
         };
+    }
+
+    private void SelectColorButton(Button button)
+    {
+        if (_selectedColorButton is not null)
+        {
+            _selectedColorButton.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D1D5DB"));
+            _selectedColorButton.BorderThickness = new Thickness(1);
+        }
+
+        _selectedColorButton = button;
+        _selectedColorButton.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111827"));
+        _selectedColorButton.BorderThickness = new Thickness(3);
     }
 
     private void CopyButton_Click(object sender, RoutedEventArgs e)

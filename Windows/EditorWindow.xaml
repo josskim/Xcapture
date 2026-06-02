@@ -20,6 +20,37 @@
             <Setter Property="Foreground" Value="#111827"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
+        <Style x:Key="ColorSwatchButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Ellipse x:Name="OuterRing"
+                                     Fill="#FFFFFF"
+                                     Stroke="{TemplateBinding BorderBrush}"
+                                     StrokeThickness="1"/>
+                            <Ellipse Margin="5"
+                                     Fill="{TemplateBinding Background}"
+                                     Stroke="#FFFFFF"
+                                     StrokeThickness="1"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="OuterRing" Property="Stroke" Value="#6B7280"/>
+                                <Setter TargetName="OuterRing" Property="StrokeThickness" Value="2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <DockPanel>
@@ -34,13 +65,12 @@
 
                 <Border Width="1" Height="28" Background="#E5E7EB" Margin="2,0,10,0"/>
 
-                <TextBlock Text="색상" VerticalAlignment="Center" Margin="0,0,6,0" FontWeight="SemiBold"/>
-                <ComboBox x:Name="ColorBox" Width="92" Height="34" Margin="0,0,12,0" SelectionChanged="ColorBox_SelectionChanged">
-                    <ComboBoxItem Content="빨강" Tag="#EF4444" IsSelected="True"/>
-                    <ComboBoxItem Content="파랑" Tag="#2563EB"/>
-                    <ComboBoxItem Content="검정" Tag="#111827"/>
-                    <ComboBoxItem Content="노랑" Tag="#FACC15"/>
-                </ComboBox>
+                <StackPanel x:Name="ColorPalette" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <Button x:Name="RedSwatch" Background="#EF4444" Tag="#EF4444" Click="ColorSwatch_Click" Style="{StaticResource ColorSwatchButtonStyle}" ToolTip="빨강"/>
+                    <Button Background="#2563EB" Tag="#2563EB" Click="ColorSwatch_Click" Style="{StaticResource ColorSwatchButtonStyle}" ToolTip="파랑"/>
+                    <Button Background="#111827" Tag="#111827" Click="ColorSwatch_Click" Style="{StaticResource ColorSwatchButtonStyle}" ToolTip="검정"/>
+                    <Button Background="#FACC15" Tag="#FACC15" Click="ColorSwatch_Click" Style="{StaticResource ColorSwatchButtonStyle}" ToolTip="노랑"/>
+                </StackPanel>
 
                 <TextBlock Text="굵기" VerticalAlignment="Center" Margin="0,0,6,0" FontWeight="SemiBold"/>
                 <Slider x:Name="StrokeSlider" Width="110" Minimum="2" Maximum="18" Value="4" Margin="0,0,14,0" ValueChanged="StrokeSlider_ValueChanged"/>
