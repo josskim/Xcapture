@@ -13,15 +13,17 @@ public static class UpdateService
 {
     private const string LatestReleaseUrl = "https://api.github.com/repos/josskim/Xcapture/releases/latest";
     private static readonly HttpClient Http = new();
+    private static bool _hasUserAgent;
 
-    public static async Task CheckForUpdatesAsync(Window owner)
+    public static async Task CheckForUpdatesAsync(Window owner, bool showUpToDateMessage = false)
     {
         try
         {
-            Http.DefaultRequestHeaders.UserAgent.ParseAdd("XCapture");
+            EnsureUserAgent();
             using var response = await Http.GetAsync(LatestReleaseUrl);
             if (!response.IsSuccessStatusCode)
             {
+                ShowManualMessage(owner, showUpToDateMessage, "업데이트 정보를 확인할 수 없습니다.");
                 return;
             }
 
@@ -33,18 +35,21 @@ public static class UpdateService
             var latestVersionText = tagName.Trim().TrimStart('v', 'V');
             if (!Version.TryParse(latestVersionText, out var latestVersion))
             {
+                ShowManualMessage(owner, showUpToDateMessage, "최신 버전 정보를 읽을 수 없습니다.");
                 return;
             }
 
             var currentVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0);
             if (latestVersion <= currentVersion)
             {
+                ShowManualMessage(owner, showUpToDateMessage, $"현재 최신 버전입니다.\n현재 버전: {currentVersion}");
                 return;
             }
 
             var downloadUrl = FindInstallerDownloadUrl(root);
             if (string.IsNullOrWhiteSpace(downloadUrl))
             {
+                ShowManualMessage(owner, showUpToDateMessage, $"새 버전 {latestVersion}이 있지만 설치 파일을 찾을 수 없습니다.");
                 return;
             }
 
@@ -72,7 +77,29 @@ public static class UpdateService
         catch (Exception exc)
         {
             LogService.Error(exc, "Update check failed");
+            ShowManualMessage(owner, showUpToDateMessage, $"업데이트 확인 중 오류가 발생했습니다.\n\n로그: {LogService.LogPath}");
         }
+    }
+
+    private static void EnsureUserAgent()
+    {
+        if (_hasUserAgent)
+        {
+            return;
+        }
+
+        Http.DefaultRequestHeaders.UserAgent.ParseAdd("XCapture");
+        _hasUserAgent = true;
+    }
+
+    private static void ShowManualMessage(Window owner, bool showMessage, string message)
+    {
+        if (!showMessage)
+        {
+            return;
+        }
+
+        MessageBox.Show(owner, message, "XCapture 업데이트", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private static string? FindInstallerDownloadUrl(JsonElement releaseRoot)

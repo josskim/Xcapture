@@ -44,14 +44,14 @@
                                FontSize="22"
                                FontWeight="Bold"
                                Foreground="#111827"/>
-                    <TextBlock Text="Ctrl+Shift+S 영역 캡쳐, Ctrl+Shift+A 전체 화면 캡쳐"
+                    <TextBlock Text="Ctrl+Shift+S 영역 캡쳐, Ctrl+Shift+A 전체화면캡쳐"
                                Margin="0,4,0,0"
                                Foreground="#6B7280"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Content="영역 캡쳐" Click="RegionCaptureButton_Click" Style="{StaticResource PrimaryButtonStyle}"/>
-                    <Button Content="전체 화면" Click="FullScreenCaptureButton_Click" Style="{StaticResource SecondaryButtonStyle}"/>
-                    <Button Content="새로고침" Click="RefreshButton_Click" Style="{StaticResource SecondaryButtonStyle}"/>
+                    <Button Content="전체화면캡쳐" Click="FullScreenCaptureButton_Click" Style="{StaticResource SecondaryButtonStyle}"/>
+                    <Button Content="업데이트" Click="UpdateButton_Click" Style="{StaticResource SecondaryButtonStyle}"/>
                 </StackPanel>
             </Grid>
         </Border>

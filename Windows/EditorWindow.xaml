@@ -82,16 +82,36 @@
                 <Button Content="프린트" Click="PrintButton_Click" Style="{StaticResource TopButtonStyle}"/>
                 <Button Content="되돌리기" Click="UndoButton_Click" Style="{StaticResource TopButtonStyle}"/>
                 <Button Content="초기화" Click="ClearButton_Click" Style="{StaticResource TopButtonStyle}"/>
+
             </WrapPanel>
         </Border>
 
-        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+        <Border DockPanel.Dock="Bottom"
+                Background="#FFFFFF"
+                BorderBrush="#D1D5DB"
+                BorderThickness="0,1,0,0"
+                Padding="10">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Content="-" Click="ZoomOutButton_Click" Style="{StaticResource TopButtonStyle}" MinWidth="44"/>
+                <Button x:Name="ZoomFitButton" Content="맞춤" Click="ZoomFitButton_Click" Style="{StaticResource TopButtonStyle}" MinWidth="64"/>
+                <Button Content="+" Click="ZoomInButton_Click" Style="{StaticResource TopButtonStyle}" MinWidth="44"/>
+                <TextBlock x:Name="ZoomText" Text="100%" VerticalAlignment="Center" Margin="6,0,0,0" FontWeight="SemiBold"/>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer x:Name="ImageScrollViewer"
+                      HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Auto"
-                      Background="#D1D5DB">
+                      Background="#D1D5DB"
+                      Loaded="ImageScrollViewer_Loaded"
+                      SizeChanged="ImageScrollViewer_SizeChanged">
             <Grid x:Name="CaptureSurface"
                   Margin="24"
                   HorizontalAlignment="Center"
                   VerticalAlignment="Center">
+                <Grid.LayoutTransform>
+                    <ScaleTransform x:Name="CaptureScale" ScaleX="1" ScaleY="1"/>
+                </Grid.LayoutTransform>
                 <Image x:Name="CaptureImage" Stretch="None"/>
                 <InkCanvas x:Name="InkLayer" Background="Transparent"/>
             </Grid>

@@ -20,20 +20,44 @@ namespace XCapture.Windows;
 
 public partial class EditorWindow : Window
 {
-    private readonly BitmapSource _originalImage;
+    private const double MinZoom = 0.1;
+    private const double MaxZoom = 4.0;
+    private const double ZoomStep = 1.2;
+
+    private BitmapSource _originalImage;
     private Button? _selectedColorButton;
+    private bool _fitToWindow = true;
+    private double _zoom = 1.0;
 
     public EditorWindow(BitmapSource image)
     {
         InitializeComponent();
         _originalImage = image;
+        SetImage(image, clearStrokes: true);
+        SelectColorButton(RedSwatch);
+        UpdateDrawingAttributes();
+    }
+
+    public void ReplaceImage(BitmapSource image)
+    {
+        _originalImage = image;
+        SetImage(image, clearStrokes: true);
+        _fitToWindow = true;
+        FitImageToWindow();
+    }
+
+    private void SetImage(BitmapSource image, bool clearStrokes)
+    {
         CaptureImage.Source = image;
         CaptureImage.Width = image.PixelWidth;
         CaptureImage.Height = image.PixelHeight;
         InkLayer.Width = image.PixelWidth;
         InkLayer.Height = image.PixelHeight;
-        SelectColorButton(RedSwatch);
-        UpdateDrawingAttributes();
+
+        if (clearStrokes)
+        {
+            InkLayer.Strokes.Clear();
+        }
     }
 
     private void PenButton_Click(object sender, RoutedEventArgs e)
@@ -136,6 +160,85 @@ public partial class EditorWindow : Window
     private void ClearButton_Click(object sender, RoutedEventArgs e)
     {
         InkLayer.Strokes.Clear();
+    }
+
+    private void ZoomOutButton_Click(object sender, RoutedEventArgs e)
+    {
+        _fitToWindow = false;
+        SetZoom(GetSteppedZoom(zoomIn: false));
+    }
+
+    private void ZoomFitButton_Click(object sender, RoutedEventArgs e)
+    {
+        _fitToWindow = true;
+        FitImageToWindow();
+    }
+
+    private void ZoomInButton_Click(object sender, RoutedEventArgs e)
+    {
+        _fitToWindow = false;
+        SetZoom(GetSteppedZoom(zoomIn: true));
+    }
+
+    private void ImageScrollViewer_Loaded(object sender, RoutedEventArgs e)
+    {
+        FitImageToWindow();
+    }
+
+    private void ImageScrollViewer_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (_fitToWindow)
+        {
+            FitImageToWindow();
+        }
+    }
+
+    private void FitImageToWindow()
+    {
+        if (_originalImage.PixelWidth <= 0 || _originalImage.PixelHeight <= 0)
+        {
+            return;
+        }
+
+        var availableWidth = Math.Max(1, ImageScrollViewer.ViewportWidth - 56);
+        var availableHeight = Math.Max(1, ImageScrollViewer.ViewportHeight - 56);
+        if (double.IsNaN(availableWidth) || double.IsInfinity(availableWidth) || availableWidth <= 1)
+        {
+            availableWidth = Math.Max(1, ImageScrollViewer.ActualWidth - 56);
+        }
+
+        if (double.IsNaN(availableHeight) || double.IsInfinity(availableHeight) || availableHeight <= 1)
+        {
+            availableHeight = Math.Max(1, ImageScrollViewer.ActualHeight - 56);
+        }
+
+        var widthScale = availableWidth / _originalImage.PixelWidth;
+        var heightScale = availableHeight / _originalImage.PixelHeight;
+        SetZoom(Math.Min(MaxZoom, Math.Min(widthScale, heightScale)));
+    }
+
+    private void SetZoom(double zoom)
+    {
+        _zoom = Math.Clamp(zoom, MinZoom, MaxZoom);
+        CaptureScale.ScaleX = _zoom;
+        CaptureScale.ScaleY = _zoom;
+        ZoomText.Text = $"{Math.Round(_zoom * 100)}%";
+    }
+
+    private double GetSteppedZoom(bool zoomIn)
+    {
+        var nextZoom = zoomIn ? _zoom * ZoomStep : _zoom / ZoomStep;
+        if (zoomIn && _zoom < 1.0 && nextZoom > 1.0)
+        {
+            return 1.0;
+        }
+
+        if (!zoomIn && _zoom > 1.0 && nextZoom < 1.0)
+        {
+            return 1.0;
+        }
+
+        return nextZoom;
     }
 
     private BitmapSource RenderEditedImage()

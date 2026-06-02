@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 using XCapture.Models;
 using XCapture.Services;
 
@@ -11,14 +12,16 @@ public partial class MainWindow : Window
 {
     private readonly Action _regionCapture;
     private readonly Action _fullScreenCapture;
+    private readonly Action<BitmapSource, bool> _openEditor;
 
     public ObservableCollection<CaptureHistoryItem> HistoryItems { get; } = new();
 
-    public MainWindow(Action regionCapture, Action fullScreenCapture)
+    public MainWindow(Action regionCapture, Action fullScreenCapture, Action<BitmapSource, bool> openEditor)
     {
         InitializeComponent();
         _regionCapture = regionCapture;
         _fullScreenCapture = fullScreenCapture;
+        _openEditor = openEditor;
         DataContext = this;
         RefreshHistory();
     }
@@ -57,9 +60,9 @@ public partial class MainWindow : Window
         _fullScreenCapture();
     }
 
-    private void RefreshButton_Click(object sender, RoutedEventArgs e)
+    private async void UpdateButton_Click(object sender, RoutedEventArgs e)
     {
-        RefreshHistory();
+        await UpdateService.CheckForUpdatesAsync(this, showUpToDateMessage: true);
     }
 
     private void HistoryList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -83,12 +86,10 @@ public partial class MainWindow : Window
         }
     }
 
-    private static void OpenHistory(CaptureHistoryItem item)
+    private void OpenHistory(CaptureHistoryItem item)
     {
         var image = HistoryService.LoadImage(item.FilePath);
-        var editor = new EditorWindow(image);
-        editor.Show();
-        editor.Activate();
+        _openEditor(image, false);
     }
 
     private void Window_Closing(object sender, CancelEventArgs e)

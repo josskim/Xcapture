@@ -11,6 +11,7 @@ public partial class App : Application
     private HotKeyManager? _hotKeys;
     private TrayService? _tray;
     private MainWindow? _mainWindow;
+    private EditorWindow? _editorWindow;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -26,7 +27,7 @@ public partial class App : Application
             args.Handled = true;
         };
 
-        _mainWindow = new MainWindow(StartRegionCapture, StartFullScreenCapture);
+        _mainWindow = new MainWindow(StartRegionCapture, StartFullScreenCapture, OpenEditor);
         MainWindow = _mainWindow;
 
         _tray = new TrayService(ShowMainWindow, StartRegionCapture, StartFullScreenCapture, Shutdown);
@@ -85,22 +86,42 @@ public partial class App : Application
         Dispatcher.Invoke(() => _mainWindow?.ShowAndActivate());
     }
 
-    private static void OpenEditor(System.Windows.Media.Imaging.BitmapSource bitmap)
+    private void OpenEditor(System.Windows.Media.Imaging.BitmapSource bitmap, bool saveToHistory = true)
     {
-        HistoryService.Save(bitmap);
+        if (saveToHistory)
+        {
+            HistoryService.Save(bitmap);
+        }
+
         ClipboardService.TryCopyImage(bitmap);
-        var editor = new EditorWindow(bitmap);
-        editor.Show();
-        editor.Topmost = true;
-        editor.Activate();
-        editor.Topmost = false;
-        editor.Focus();
+
+        if (_editorWindow is null)
+        {
+            _editorWindow = new EditorWindow(bitmap);
+            _editorWindow.Closed += (_, _) => _editorWindow = null;
+            _editorWindow.Show();
+        }
+        else
+        {
+            _editorWindow.ReplaceImage(bitmap);
+            if (!_editorWindow.IsVisible)
+            {
+                _editorWindow.Show();
+            }
+        }
+
+        _editorWindow.WindowState = WindowState.Normal;
+        _editorWindow.Topmost = true;
+        _editorWindow.Activate();
+        _editorWindow.Topmost = false;
+        _editorWindow.Focus();
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
         _hotKeys?.Dispose();
         _tray?.Dispose();
+        _editorWindow = null;
         _mainWindow = null;
         base.OnExit(e);
     }
