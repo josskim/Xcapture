@@ -26,6 +26,7 @@ public partial class EditorWindow : Window
 
     private BitmapSource _originalImage;
     private Button? _selectedColorButton;
+    private Button? _selectedToolButton;
     private bool _fitToWindow = true;
     private double _zoom = 1.0;
 
@@ -35,6 +36,8 @@ public partial class EditorWindow : Window
         _originalImage = image;
         SetImage(image, clearStrokes: true);
         SelectColorButton(RedSwatch);
+        SelectToolButton(PenButton);
+        InkLayer.EditingMode = InkCanvasEditingMode.Ink;
         UpdateDrawingAttributes();
     }
 
@@ -63,11 +66,13 @@ public partial class EditorWindow : Window
     private void PenButton_Click(object sender, RoutedEventArgs e)
     {
         InkLayer.EditingMode = InkCanvasEditingMode.Ink;
+        SelectToolButton(PenButton);
     }
 
     private void EraserButton_Click(object sender, RoutedEventArgs e)
     {
         InkLayer.EditingMode = InkCanvasEditingMode.EraseByStroke;
+        SelectToolButton(EraserButton);
     }
 
     private void ColorSwatch_Click(object sender, RoutedEventArgs e)
@@ -111,6 +116,21 @@ public partial class EditorWindow : Window
         _selectedColorButton = button;
         _selectedColorButton.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111827"));
         _selectedColorButton.BorderThickness = new Thickness(3);
+    }
+
+    private void SelectToolButton(Button button)
+    {
+        if (_selectedToolButton is not null)
+        {
+            _selectedToolButton.Background = Brushes.White;
+            _selectedToolButton.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111827"));
+            _selectedToolButton.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D1D5DB"));
+        }
+
+        _selectedToolButton = button;
+        _selectedToolButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111827"));
+        _selectedToolButton.Foreground = Brushes.White;
+        _selectedToolButton.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#111827"));
     }
 
     private void CopyButton_Click(object sender, RoutedEventArgs e)
@@ -302,11 +322,13 @@ public partial class EditorWindow : Window
         else if (e.Key == Key.P)
         {
             InkLayer.EditingMode = InkCanvasEditingMode.Ink;
+            SelectToolButton(PenButton);
             e.Handled = true;
         }
         else if (e.Key == Key.E)
         {
             InkLayer.EditingMode = InkCanvasEditingMode.EraseByStroke;
+            SelectToolButton(EraserButton);
             e.Handled = true;
         }
     }
