@@ -4,7 +4,7 @@
         Title="XCapture"
         MinWidth="720"
         MinHeight="420"
-        Width="1040"
+        Width="1090"
         Height="720"
         Background="#F3F4F6"
         KeyDown="Window_KeyDown">
