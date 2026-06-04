@@ -20,6 +20,13 @@
             <Setter Property="Foreground" Value="#111827"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
+        <Style x:Key="AccentButtonStyle" TargetType="Button" BasedOn="{StaticResource TopButtonStyle}">
+            <Setter Property="MinWidth" Value="108"/>
+            <Setter Property="Background" Value="#F59E0B"/>
+            <Setter Property="Foreground" Value="#111827"/>
+            <Setter Property="BorderBrush" Value="#D97706"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
         <Style x:Key="ColorSwatchButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="28"/>
             <Setter Property="Height" Value="28"/>
@@ -82,6 +89,7 @@
                 <Button Content="프린트" Click="PrintButton_Click" Style="{StaticResource TopButtonStyle}"/>
                 <Button Content="되돌리기" Click="UndoButton_Click" Style="{StaticResource TopButtonStyle}"/>
                 <Button Content="초기화" Click="ClearButton_Click" Style="{StaticResource TopButtonStyle}"/>
+                <Button Content="캡쳐리스트" Click="CaptureListButton_Click" Style="{StaticResource AccentButtonStyle}"/>
 
             </WrapPanel>
         </Border>

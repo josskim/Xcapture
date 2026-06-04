@@ -25,15 +25,17 @@ public partial class EditorWindow : Window
     private const double ZoomStep = 1.2;
 
     private BitmapSource _originalImage;
+    private readonly Action _showMainWindow;
     private Button? _selectedColorButton;
     private Button? _selectedToolButton;
     private bool _fitToWindow = true;
     private double _zoom = 1.0;
 
-    public EditorWindow(BitmapSource image)
+    public EditorWindow(BitmapSource image, Action showMainWindow)
     {
         InitializeComponent();
         _originalImage = image;
+        _showMainWindow = showMainWindow;
         SetImage(image, clearStrokes: true);
         SelectColorButton(RedSwatch);
         SelectToolButton(PenButton);
@@ -182,6 +184,11 @@ public partial class EditorWindow : Window
         InkLayer.Strokes.Clear();
     }
 
+    private void CaptureListButton_Click(object sender, RoutedEventArgs e)
+    {
+        _showMainWindow();
+    }
+
     private void ZoomOutButton_Click(object sender, RoutedEventArgs e)
     {
         _fitToWindow = false;
@@ -234,7 +241,7 @@ public partial class EditorWindow : Window
 
         var widthScale = availableWidth / _originalImage.PixelWidth;
         var heightScale = availableHeight / _originalImage.PixelHeight;
-        SetZoom(Math.Min(MaxZoom, Math.Min(widthScale, heightScale)));
+        SetZoom(Math.Min(1.0, Math.Min(MaxZoom, Math.Min(widthScale, heightScale))));
     }
 
     private void SetZoom(double zoom)

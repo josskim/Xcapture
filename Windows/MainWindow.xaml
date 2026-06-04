@@ -62,7 +62,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Text="최근 캡쳐 10개"
+            <TextBlock Text="최근 캡쳐 20개"
                        FontSize="17"
                        FontWeight="SemiBold"
                        Foreground="#111827"
@@ -106,11 +106,19 @@
                                                Margin="0,4,0,0"
                                                Foreground="#6B7280"/>
                                 </StackPanel>
-                                <Button Grid.Column="2"
-                                        Content="열기"
-                                        MinWidth="72"
-                                        Height="32"
-                                        Click="OpenHistoryButton_Click"/>
+                                <StackPanel Grid.Column="2"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center">
+                                    <Button Content="열기"
+                                            MinWidth="72"
+                                            Height="32"
+                                            Margin="0,0,8,0"
+                                            Click="OpenHistoryButton_Click"/>
+                                    <Button Content="삭제"
+                                            MinWidth="72"
+                                            Height="32"
+                                            Click="DeleteHistoryButton_Click"/>
+                                </StackPanel>
                             </Grid>
                         </Border>
                     </DataTemplate>

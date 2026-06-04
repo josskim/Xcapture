@@ -51,6 +51,7 @@ public partial class App : Application
                 overlay.ShowDialog();
                 if (overlay.IsCaptureAccepted && overlay.CapturedBitmap is not null)
                 {
+                    CaptureSoundService.PlayShutter();
                     OpenEditor(overlay.CapturedBitmap);
                     _mainWindow?.RefreshHistory();
                 }
@@ -70,6 +71,7 @@ public partial class App : Application
             try
             {
                 var bitmap = ScreenCaptureService.CaptureAllScreens();
+                CaptureSoundService.PlayShutter();
                 OpenEditor(bitmap);
                 _mainWindow?.RefreshHistory();
             }
@@ -97,7 +99,7 @@ public partial class App : Application
 
         if (_editorWindow is null)
         {
-            _editorWindow = new EditorWindow(bitmap);
+            _editorWindow = new EditorWindow(bitmap, ShowMainWindow);
             _editorWindow.Closed += (_, _) => _editorWindow = null;
             _editorWindow.Show();
         }

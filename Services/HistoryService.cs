@@ -6,7 +6,7 @@ namespace XCapture.Services;
 
 public static class HistoryService
 {
-    private const int MaxItems = 10;
+    private const int MaxItems = 20;
 
     private static readonly string HistoryDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -44,6 +44,22 @@ public static class HistoryService
         image.EndInit();
         image.Freeze();
         return image;
+    }
+
+    public static void Delete(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch (Exception exc)
+        {
+            LogService.Error(exc, $"Failed to delete history file: {path}");
+            throw;
+        }
     }
 
     public static void Prune()
