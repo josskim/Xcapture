@@ -6,6 +6,9 @@ namespace XCapture.Services;
 
 public static class CaptureSoundService
 {
+    private static readonly object LockObject = new();
+    private static MediaPlayer? _player;
+
     public static void PlayShutter()
     {
         try
@@ -17,21 +20,37 @@ public static class CaptureSoundService
                 return;
             }
 
-            var player = new MediaPlayer();
-            player.Open(new Uri(soundPath, UriKind.Absolute));
-            player.MediaEnded += (_, _) => player.Close();
-            player.MediaFailed += (_, args) =>
+            lock (LockObject)
             {
-                player.Close();
-                LogService.Error(args.ErrorException, "Failed to play capture sound file");
-                SystemSounds.Asterisk.Play();
-            };
-            player.Play();
+                _player?.Close();
+                _player = new MediaPlayer
+                {
+                    Volume = 1.0
+                };
+                _player.MediaEnded += (_, _) => ClosePlayer();
+                _player.MediaFailed += (_, args) =>
+                {
+                    ClosePlayer();
+                    LogService.Error(args.ErrorException, "Failed to play capture sound file");
+                    SystemSounds.Asterisk.Play();
+                };
+                _player.Open(new Uri(soundPath, UriKind.Absolute));
+                _player.Play();
+            }
         }
         catch (Exception exc)
         {
             LogService.Error(exc, "Failed to play capture sound");
             SystemSounds.Asterisk.Play();
+        }
+    }
+
+    private static void ClosePlayer()
+    {
+        lock (LockObject)
+        {
+            _player?.Close();
+            _player = null;
         }
     }
 }
