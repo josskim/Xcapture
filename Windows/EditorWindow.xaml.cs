@@ -30,6 +30,8 @@ public partial class EditorWindow : Window
     private Button? _selectedToolButton;
     private bool _fitToWindow = true;
     private double _zoom = 1.0;
+    private double _displayWidth;
+    private double _displayHeight;
 
     public EditorWindow(BitmapSource image, Action showMainWindow)
     {
@@ -54,10 +56,7 @@ public partial class EditorWindow : Window
     private void SetImage(BitmapSource image, bool clearStrokes)
     {
         CaptureImage.Source = image;
-        CaptureImage.Width = image.PixelWidth;
-        CaptureImage.Height = image.PixelHeight;
-        InkLayer.Width = image.PixelWidth;
-        InkLayer.Height = image.PixelHeight;
+        UpdateImageDisplaySize();
 
         if (clearStrokes)
         {
@@ -209,6 +208,7 @@ public partial class EditorWindow : Window
 
     private void ImageScrollViewer_Loaded(object sender, RoutedEventArgs e)
     {
+        UpdateImageDisplaySize();
         FitImageToWindow();
     }
 
@@ -239,8 +239,8 @@ public partial class EditorWindow : Window
             availableHeight = Math.Max(1, ImageScrollViewer.ActualHeight - 56);
         }
 
-        var widthScale = availableWidth / _originalImage.PixelWidth;
-        var heightScale = availableHeight / _originalImage.PixelHeight;
+        var widthScale = availableWidth / Math.Max(1, _displayWidth);
+        var heightScale = availableHeight / Math.Max(1, _displayHeight);
         SetZoom(Math.Min(1.0, Math.Min(MaxZoom, Math.Min(widthScale, heightScale))));
     }
 
@@ -272,36 +272,63 @@ public partial class EditorWindow : Window
     {
         var width = _originalImage.PixelWidth;
         var height = _originalImage.PixelHeight;
-        var target = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+        var dpi = GetCurrentDpi();
+        var target = new RenderTargetBitmap(width, height, 96 * dpi.DpiScaleX, 96 * dpi.DpiScaleY, PixelFormats.Pbgra32);
+        var displayWidth = Math.Max(1, width / dpi.DpiScaleX);
+        var displayHeight = Math.Max(1, height / dpi.DpiScaleY);
 
         var surface = new Grid
         {
-            Width = width,
-            Height = height,
+            Width = displayWidth,
+            Height = displayHeight,
             Background = Brushes.Transparent
         };
         surface.Children.Add(new Image
         {
             Source = _originalImage,
-            Width = width,
-            Height = height,
+            Width = displayWidth,
+            Height = displayHeight,
             Stretch = Stretch.Fill
         });
         surface.Children.Add(new InkCanvas
         {
-            Width = width,
-            Height = height,
+            Width = displayWidth,
+            Height = displayHeight,
             Background = Brushes.Transparent,
             Strokes = new StrokeCollection(InkLayer.Strokes)
         });
 
-        surface.Measure(new Size(width, height));
-        surface.Arrange(new Rect(0, 0, width, height));
+        surface.Measure(new Size(displayWidth, displayHeight));
+        surface.Arrange(new Rect(0, 0, displayWidth, displayHeight));
         surface.UpdateLayout();
 
         target.Render(surface);
         target.Freeze();
         return target;
+    }
+
+    private void UpdateImageDisplaySize()
+    {
+        var dpi = GetCurrentDpi();
+        _displayWidth = Math.Max(1, _originalImage.PixelWidth / dpi.DpiScaleX);
+        _displayHeight = Math.Max(1, _originalImage.PixelHeight / dpi.DpiScaleY);
+
+        CaptureSurface.Width = _displayWidth;
+        CaptureSurface.Height = _displayHeight;
+        CaptureImage.Width = _displayWidth;
+        CaptureImage.Height = _displayHeight;
+        InkLayer.Width = _displayWidth;
+        InkLayer.Height = _displayHeight;
+    }
+
+    private DpiScale GetCurrentDpi()
+    {
+        if (PresentationSource.FromVisual(this) is null)
+        {
+            return new DpiScale(1.0, 1.0);
+        }
+
+        return VisualTreeHelper.GetDpi(this);
     }
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
