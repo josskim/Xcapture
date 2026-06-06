@@ -44,7 +44,8 @@
                                FontSize="22"
                                FontWeight="Bold"
                                Foreground="#111827"/>
-                    <TextBlock Text="Ctrl+Shift+S 영역 캡쳐, Ctrl+Shift+A 전체화면캡쳐"
+                    <TextBlock x:Name="ShortcutText"
+                               Text="Ctrl+Shift+S 영역 캡쳐, Ctrl+Shift+A 전체화면캡쳐"
                                Margin="0,4,0,0"
                                Foreground="#6B7280"/>
                 </StackPanel>
@@ -52,6 +53,7 @@
                     <Button Content="영역 캡쳐" Click="RegionCaptureButton_Click" Style="{StaticResource PrimaryButtonStyle}"/>
                     <Button Content="전체화면캡쳐" Click="FullScreenCaptureButton_Click" Style="{StaticResource SecondaryButtonStyle}"/>
                     <Button Content="업데이트" Click="UpdateButton_Click" Style="{StaticResource SecondaryButtonStyle}"/>
+                    <Button Content="설정" Click="SettingsButton_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0"/>
                 </StackPanel>
             </Grid>
         </Border>

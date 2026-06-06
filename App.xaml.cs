@@ -1,4 +1,5 @@
 using System.Windows;
+using XCapture.Models;
 using XCapture.Services;
 using XCapture.Windows;
 using Application = System.Windows.Application;
@@ -12,6 +13,7 @@ public partial class App : Application
     private TrayService? _tray;
     private MainWindow? _mainWindow;
     private EditorWindow? _editorWindow;
+    private AppSettings _settings = new();
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -27,14 +29,32 @@ public partial class App : Application
             args.Handled = true;
         };
 
-        _mainWindow = new MainWindow(StartRegionCapture, StartFullScreenCapture, OpenEditor);
+        _settings = SettingsService.Load();
+        _mainWindow = new MainWindow(StartRegionCapture, StartFullScreenCapture, OpenEditor, OpenSettings, _settings);
         MainWindow = _mainWindow;
 
-        _tray = new TrayService(ShowMainWindow, StartRegionCapture, StartFullScreenCapture, Shutdown);
+        _tray = new TrayService(
+            ShowMainWindow,
+            StartRegionCapture,
+            StartFullScreenCapture,
+            Shutdown,
+            _settings);
         _hotKeys = new HotKeyManager();
         _hotKeys.RegionCapturePressed += StartRegionCapture;
         _hotKeys.FullScreenCapturePressed += StartFullScreenCapture;
-        _hotKeys.Register();
+        if (!_hotKeys.Register(_settings))
+        {
+            _settings = new AppSettings();
+            _hotKeys.Apply(_settings);
+            SettingsService.Save(_settings);
+            _mainWindow.UpdateShortcuts(_settings);
+            _tray.UpdateShortcuts(_settings);
+            MessageBox.Show(
+                "저장된 단축키를 사용할 수 없어 기본 단축키로 복원했습니다.",
+                "XCapture",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
 
         _tray.Show();
         _mainWindow.ShowAndActivate();
@@ -86,6 +106,40 @@ public partial class App : Application
     private void ShowMainWindow()
     {
         Dispatcher.Invoke(() => _mainWindow?.ShowAndActivate());
+    }
+
+    private void OpenSettings()
+    {
+        if (_mainWindow is null || _hotKeys is null)
+        {
+            return;
+        }
+
+        var window = new SettingsWindow(_settings)
+        {
+            Owner = _mainWindow
+        };
+
+        if (window.ShowDialog() != true || window.Result is null)
+        {
+            return;
+        }
+
+        if (!_hotKeys.Apply(window.Result))
+        {
+            MessageBox.Show(
+                _mainWindow,
+                "다른 프로그램에서 사용 중인 단축키입니다. 다른 키 조합을 선택해주세요.",
+                "XCapture",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        _settings = window.Result;
+        SettingsService.Save(_settings);
+        _mainWindow.UpdateShortcuts(_settings);
+        _tray?.UpdateShortcuts(_settings);
     }
 
     private void OpenEditor(System.Windows.Media.Imaging.BitmapSource bitmap, bool saveToHistory = true)

@@ -13,16 +13,24 @@ public partial class MainWindow : Window
     private readonly Action _regionCapture;
     private readonly Action _fullScreenCapture;
     private readonly Action<BitmapSource, bool> _openEditor;
+    private readonly Action _openSettings;
 
     public ObservableCollection<CaptureHistoryItem> HistoryItems { get; } = new();
 
-    public MainWindow(Action regionCapture, Action fullScreenCapture, Action<BitmapSource, bool> openEditor)
+    public MainWindow(
+        Action regionCapture,
+        Action fullScreenCapture,
+        Action<BitmapSource, bool> openEditor,
+        Action openSettings,
+        AppSettings settings)
     {
         InitializeComponent();
         _regionCapture = regionCapture;
         _fullScreenCapture = fullScreenCapture;
         _openEditor = openEditor;
+        _openSettings = openSettings;
         DataContext = this;
+        UpdateShortcuts(settings);
         RefreshHistory();
     }
 
@@ -63,6 +71,18 @@ public partial class MainWindow : Window
     private async void UpdateButton_Click(object sender, RoutedEventArgs e)
     {
         await UpdateService.CheckForUpdatesAsync(this, showUpToDateMessage: true);
+    }
+
+    private void SettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        _openSettings();
+    }
+
+    public void UpdateShortcuts(AppSettings settings)
+    {
+        ShortcutText.Text =
+            $"{settings.RegionCaptureHotKey.DisplayText} 영역 캡쳐, " +
+            $"{settings.FullScreenCaptureHotKey.DisplayText} 전체화면캡쳐";
     }
 
     private void HistoryList_MouseDoubleClick(object sender, MouseButtonEventArgs e)

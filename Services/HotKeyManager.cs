@@ -1,6 +1,8 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Input;
+using XCapture.Models;
 
 namespace XCapture.Services;
 
@@ -9,37 +11,63 @@ public sealed class HotKeyManager : IDisposable
     private const int RegionCaptureId = 9001;
     private const int FullScreenCaptureId = 9002;
     private const int WmHotKey = 0x0312;
+    private const uint ModAlt = 0x0001;
     private const uint ModControl = 0x0002;
     private const uint ModShift = 0x0004;
-    private const uint VkS = 0x53;
-    private const uint VkA = 0x41;
+    private const uint ModWindows = 0x0008;
 
     private HwndSource? _source;
     private Window? _helperWindow;
+    private AppSettings _settings = new();
 
     public event Action? RegionCapturePressed;
     public event Action? FullScreenCapturePressed;
 
-    public void Register()
+    public bool Register(AppSettings settings)
     {
-        _helperWindow = new Window
+        if (_helperWindow is null)
         {
-            Width = 0,
-            Height = 0,
-            ShowInTaskbar = false,
-            WindowStyle = WindowStyle.None,
-            AllowsTransparency = true,
-            Opacity = 0
-        };
-        _helperWindow.Show();
-        _helperWindow.Hide();
+            _helperWindow = new Window
+            {
+                Width = 0,
+                Height = 0,
+                ShowInTaskbar = false,
+                WindowStyle = WindowStyle.None,
+                AllowsTransparency = true,
+                Opacity = 0
+            };
+            _helperWindow.Show();
+            _helperWindow.Hide();
 
-        var helper = new WindowInteropHelper(_helperWindow);
-        _source = HwndSource.FromHwnd(helper.Handle);
-        _source?.AddHook(WndProc);
+            var helper = new WindowInteropHelper(_helperWindow);
+            _source = HwndSource.FromHwnd(helper.Handle);
+            _source?.AddHook(WndProc);
+        }
 
-        RegisterHotKey(helper.Handle, RegionCaptureId, ModControl | ModShift, VkS);
-        RegisterHotKey(helper.Handle, FullScreenCaptureId, ModControl | ModShift, VkA);
+        return Apply(settings);
+    }
+
+    public bool Apply(AppSettings settings)
+    {
+        if (_source is null)
+        {
+            return false;
+        }
+
+        var previous = _settings;
+        UnregisterCurrent();
+
+        if (RegisterGesture(RegionCaptureId, settings.RegionCaptureHotKey) &&
+            RegisterGesture(FullScreenCaptureId, settings.FullScreenCaptureHotKey))
+        {
+            _settings = settings;
+            return true;
+        }
+
+        UnregisterCurrent();
+        RegisterGesture(RegionCaptureId, previous.RegionCaptureHotKey);
+        RegisterGesture(FullScreenCaptureId, previous.FullScreenCaptureHotKey);
+        return false;
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -65,14 +93,44 @@ public sealed class HotKeyManager : IDisposable
     {
         if (_source is not null)
         {
-            UnregisterHotKey(_source.Handle, RegionCaptureId);
-            UnregisterHotKey(_source.Handle, FullScreenCaptureId);
+            UnregisterCurrent();
             _source.RemoveHook(WndProc);
             _source = null;
         }
 
         _helperWindow?.Close();
         _helperWindow = null;
+    }
+
+    private bool RegisterGesture(int id, HotKeyGesture gesture)
+    {
+        return _source is not null &&
+               RegisterHotKey(
+                   _source.Handle,
+                   id,
+                   GetModifiers(gesture),
+                   (uint)KeyInterop.VirtualKeyFromKey(gesture.Key));
+    }
+
+    private void UnregisterCurrent()
+    {
+        if (_source is null)
+        {
+            return;
+        }
+
+        UnregisterHotKey(_source.Handle, RegionCaptureId);
+        UnregisterHotKey(_source.Handle, FullScreenCaptureId);
+    }
+
+    private static uint GetModifiers(HotKeyGesture gesture)
+    {
+        var modifiers = 0u;
+        if (gesture.Control) modifiers |= ModControl;
+        if (gesture.Shift) modifiers |= ModShift;
+        if (gesture.Alt) modifiers |= ModAlt;
+        if (gesture.Windows) modifiers |= ModWindows;
+        return modifiers;
     }
 
     [DllImport("user32.dll", SetLastError = true)]
