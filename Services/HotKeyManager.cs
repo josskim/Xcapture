@@ -19,6 +19,7 @@ public sealed class HotKeyManager : IDisposable
     private HwndSource? _source;
     private Window? _helperWindow;
     private AppSettings _settings = new();
+    private bool _hasRegisteredSettings;
 
     public event Action? RegionCapturePressed;
     public event Action? FullScreenCapturePressed;
@@ -55,18 +56,30 @@ public sealed class HotKeyManager : IDisposable
         }
 
         var previous = _settings;
+        var hadPreviousRegistration = _hasRegisteredSettings;
         UnregisterCurrent();
 
         if (RegisterGesture(RegionCaptureId, settings.RegionCaptureHotKey) &&
             RegisterGesture(FullScreenCaptureId, settings.FullScreenCaptureHotKey))
         {
             _settings = settings;
+            _hasRegisteredSettings = true;
             return true;
         }
 
         UnregisterCurrent();
-        RegisterGesture(RegionCaptureId, previous.RegionCaptureHotKey);
-        RegisterGesture(FullScreenCaptureId, previous.FullScreenCaptureHotKey);
+        if (hadPreviousRegistration &&
+            RegisterGesture(RegionCaptureId, previous.RegionCaptureHotKey) &&
+            RegisterGesture(FullScreenCaptureId, previous.FullScreenCaptureHotKey))
+        {
+            _hasRegisteredSettings = true;
+        }
+        else
+        {
+            UnregisterCurrent();
+            _hasRegisteredSettings = false;
+        }
+
         return false;
     }
 
@@ -94,6 +107,7 @@ public sealed class HotKeyManager : IDisposable
         if (_source is not null)
         {
             UnregisterCurrent();
+            _hasRegisteredSettings = false;
             _source.RemoveHook(WndProc);
             _source = null;
         }

@@ -14,10 +14,21 @@ public partial class App : Application
     private MainWindow? _mainWindow;
     private EditorWindow? _editorWindow;
     private AppSettings _settings = new();
+    private SingleInstanceService? _singleInstance;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        _singleInstance = new SingleInstanceService();
+        if (!_singleInstance.IsPrimaryInstance)
+        {
+            Shutdown();
+            return;
+        }
+
+        _singleInstance.ActivationRequested += ShowMainWindow;
+        _singleInstance.StartListening();
+
         DispatcherUnhandledException += (_, args) =>
         {
             LogService.Error(args.Exception, "Dispatcher unhandled exception");
@@ -44,13 +55,8 @@ public partial class App : Application
         _hotKeys.FullScreenCapturePressed += StartFullScreenCapture;
         if (!_hotKeys.Register(_settings))
         {
-            _settings = new AppSettings();
-            _hotKeys.Apply(_settings);
-            SettingsService.Save(_settings);
-            _mainWindow.UpdateShortcuts(_settings);
-            _tray.UpdateShortcuts(_settings);
             MessageBox.Show(
-                "저장된 단축키를 사용할 수 없어 기본 단축키로 복원했습니다.",
+                "설정한 단축키를 다른 프로그램에서 사용 중입니다.\n\n설정값은 유지됩니다. 설정에서 다른 단축키를 지정해주세요.",
                 "XCapture",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
@@ -177,6 +183,7 @@ public partial class App : Application
     {
         _hotKeys?.Dispose();
         _tray?.Dispose();
+        _singleInstance?.Dispose();
         _editorWindow = null;
         _mainWindow = null;
         base.OnExit(e);
