@@ -1,4 +1,5 @@
 using Microsoft.Win32;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Ink;
@@ -32,25 +33,30 @@ public partial class EditorWindow : Window
     private double _zoom = 1.0;
     private double _displayWidth;
     private double _displayHeight;
+    private string? _historyFilePath;
 
-    public EditorWindow(BitmapSource image, Action showMainWindow)
+    public EditorWindow(BitmapSource image, Action showMainWindow, string? historyFilePath = null)
     {
         InitializeComponent();
         _originalImage = image;
         _showMainWindow = showMainWindow;
+        _historyFilePath = NormalizePath(historyFilePath);
         SetImage(image, clearStrokes: true);
         SelectColorButton(RedSwatch);
         SelectToolButton(PenButton);
         InkLayer.EditingMode = InkCanvasEditingMode.Ink;
         UpdateDrawingAttributes();
+        UpdateHistoryNavigationButtons();
     }
 
-    public void ReplaceImage(BitmapSource image)
+    public void ReplaceImage(BitmapSource image, string? historyFilePath = null)
     {
         _originalImage = image;
+        _historyFilePath = NormalizePath(historyFilePath);
         SetImage(image, clearStrokes: true);
         _fitToWindow = true;
         FitImageToWindow();
+        UpdateHistoryNavigationButtons();
     }
 
     private void SetImage(BitmapSource image, bool clearStrokes)
@@ -186,6 +192,96 @@ public partial class EditorWindow : Window
     private void CaptureListButton_Click(object sender, RoutedEventArgs e)
     {
         _showMainWindow();
+    }
+
+    private void PreviousHistoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        NavigateHistory(-1);
+    }
+
+    private void NextHistoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        NavigateHistory(1);
+    }
+
+    private void NavigateHistory(int offset)
+    {
+        var items = HistoryService.Load();
+        var currentIndex = GetCurrentHistoryIndex(items);
+        if (currentIndex < 0)
+        {
+            UpdateHistoryNavigationButtons();
+            return;
+        }
+
+        var targetIndex = currentIndex + offset;
+        if (targetIndex < 0 || targetIndex >= items.Count)
+        {
+            UpdateHistoryNavigationButtons();
+            return;
+        }
+
+        try
+        {
+            var target = items[targetIndex];
+            var image = HistoryService.LoadImage(target.FilePath);
+            ReplaceImage(image, target.FilePath);
+            ClipboardService.TryCopyImage(image);
+        }
+        catch (Exception exc)
+        {
+            LogService.Error(exc, "Failed to open adjacent history image");
+            System.Windows.MessageBox.Show(this, "캡쳐리스트 이미지를 여는 중 오류가 발생했습니다.", "XCapture");
+            UpdateHistoryNavigationButtons();
+        }
+    }
+
+    private void UpdateHistoryNavigationButtons()
+    {
+        if (PreviousHistoryButton is null || NextHistoryButton is null)
+        {
+            return;
+        }
+
+        var items = HistoryService.Load();
+        var currentIndex = GetCurrentHistoryIndex(items);
+        PreviousHistoryButton.IsEnabled = currentIndex > 0;
+        NextHistoryButton.IsEnabled = currentIndex >= 0 && currentIndex < items.Count - 1;
+    }
+
+    private int GetCurrentHistoryIndex(IReadOnlyList<XCapture.Models.CaptureHistoryItem> items)
+    {
+        if (string.IsNullOrWhiteSpace(_historyFilePath))
+        {
+            return -1;
+        }
+
+        for (var i = 0; i < items.Count; i++)
+        {
+            if (string.Equals(NormalizePath(items[i].FilePath), _historyFilePath, StringComparison.OrdinalIgnoreCase))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private static string? NormalizePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            return Path.GetFullPath(path);
+        }
+        catch
+        {
+            return path;
+        }
     }
 
     private void ZoomOutButton_Click(object sender, RoutedEventArgs e)
@@ -351,6 +447,16 @@ public partial class EditorWindow : Window
         else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z)
         {
             UndoButton_Click(sender, e);
+            e.Handled = true;
+        }
+        else if (Keyboard.Modifiers == ModifierKeys.Alt && e.Key == Key.Left)
+        {
+            NavigateHistory(-1);
+            e.Handled = true;
+        }
+        else if (Keyboard.Modifiers == ModifierKeys.Alt && e.Key == Key.Right)
+        {
+            NavigateHistory(1);
             e.Handled = true;
         }
         else if (e.Key == Key.P)

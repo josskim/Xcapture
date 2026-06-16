@@ -12,7 +12,7 @@ public partial class MainWindow : Window
 {
     private readonly Action _regionCapture;
     private readonly Action _fullScreenCapture;
-    private readonly Action<BitmapSource, bool> _openEditor;
+    private readonly Action<BitmapSource, bool, string?> _openEditor;
     private readonly Action _openSettings;
 
     public ObservableCollection<CaptureHistoryItem> HistoryItems { get; } = new();
@@ -20,7 +20,7 @@ public partial class MainWindow : Window
     public MainWindow(
         Action regionCapture,
         Action fullScreenCapture,
-        Action<BitmapSource, bool> openEditor,
+        Action<BitmapSource, bool, string?> openEditor,
         Action openSettings,
         AppSettings settings)
     {
@@ -137,7 +137,7 @@ public partial class MainWindow : Window
     private void OpenHistory(CaptureHistoryItem item)
     {
         var image = HistoryService.LoadImage(item.FilePath);
-        _openEditor(image, false);
+        _openEditor(image, false, item.FilePath);
     }
 
     private void Window_Closing(object sender, CancelEventArgs e)

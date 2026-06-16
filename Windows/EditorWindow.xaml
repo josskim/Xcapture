@@ -99,12 +99,27 @@
                 BorderBrush="#D1D5DB"
                 BorderThickness="0,1,0,0"
                 Padding="10">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Content="-" Click="ZoomOutButton_Click" Style="{StaticResource TopButtonStyle}" MinWidth="44"/>
-                <Button x:Name="ZoomFitButton" Content="맞춤" Click="ZoomFitButton_Click" Style="{StaticResource TopButtonStyle}" MinWidth="64"/>
-                <Button Content="+" Click="ZoomInButton_Click" Style="{StaticResource TopButtonStyle}" MinWidth="44"/>
-                <TextBlock x:Name="ZoomText" Text="100%" VerticalAlignment="Center" Margin="6,0,0,0" FontWeight="SemiBold"/>
-            </StackPanel>
+            <Grid>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Content="-" Click="ZoomOutButton_Click" Style="{StaticResource TopButtonStyle}" MinWidth="44"/>
+                    <Button x:Name="ZoomFitButton" Content="맞춤" Click="ZoomFitButton_Click" Style="{StaticResource TopButtonStyle}" MinWidth="64"/>
+                    <Button Content="+" Click="ZoomInButton_Click" Style="{StaticResource TopButtonStyle}" MinWidth="44"/>
+                    <TextBlock x:Name="ZoomText" Text="100%" VerticalAlignment="Center" Margin="6,0,0,0" FontWeight="SemiBold"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="PreviousHistoryButton"
+                            Content="&#xC774;&#xC804;"
+                            Click="PreviousHistoryButton_Click"
+                            Style="{StaticResource TopButtonStyle}"
+                            MinWidth="72"/>
+                    <Button x:Name="NextHistoryButton"
+                            Content="&#xB2E4;&#xC74C;"
+                            Click="NextHistoryButton_Click"
+                            Style="{StaticResource TopButtonStyle}"
+                            MinWidth="72"
+                            Margin="0"/>
+                </StackPanel>
+            </Grid>
         </Border>
 
         <ScrollViewer x:Name="ImageScrollViewer"

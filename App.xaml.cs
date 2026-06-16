@@ -148,24 +148,25 @@ public partial class App : Application
         _tray?.UpdateShortcuts(_settings);
     }
 
-    private void OpenEditor(System.Windows.Media.Imaging.BitmapSource bitmap, bool saveToHistory = true)
+    private void OpenEditor(System.Windows.Media.Imaging.BitmapSource bitmap, bool saveToHistory = true, string? historyFilePath = null)
     {
         if (saveToHistory)
         {
             HistoryService.Save(bitmap);
+            historyFilePath = null;
         }
 
         ClipboardService.TryCopyImage(bitmap);
 
         if (_editorWindow is null)
         {
-            _editorWindow = new EditorWindow(bitmap, ShowMainWindow);
+            _editorWindow = new EditorWindow(bitmap, ShowMainWindow, historyFilePath);
             _editorWindow.Closed += (_, _) => _editorWindow = null;
             _editorWindow.Show();
         }
         else
         {
-            _editorWindow.ReplaceImage(bitmap);
+            _editorWindow.ReplaceImage(bitmap, historyFilePath);
             if (!_editorWindow.IsVisible)
             {
                 _editorWindow.Show();
