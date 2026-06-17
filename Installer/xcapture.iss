@@ -1,5 +1,5 @@
 #define MyAppName "XCapture"
-#define MyAppVersion "1.0.12"
+#define MyAppVersion "1.0.13"
 #define MyAppPublisher "XCapture"
 #define MyAppExeName "XCapture.exe"
 #define PublishDir "..\publish-latest"

@@ -12,6 +12,9 @@ namespace XCapture.Windows;
 
 public partial class CaptureOverlayWindow : Window
 {
+    private const double CursorClearance = 24;
+    private const int CaptureSettleDelayMilliseconds = 220;
+
     private Point _startPoint;
     private bool _isDragging;
 
@@ -94,8 +97,9 @@ public partial class CaptureOverlayWindow : Window
             return;
         }
 
+        MoveCursorOutsideSelection(new Rect(x, y, width, height));
         Hide();
-        Thread.Sleep(120);
+        Thread.Sleep(CaptureSettleDelayMilliseconds);
         CapturedBitmap = ScreenCaptureService.CaptureWpfRect(new Rect(Left + x, Top + y, width, height));
         IsCaptureAccepted = true;
         Close();
@@ -121,5 +125,47 @@ public partial class CaptureOverlayWindow : Window
         CapturedBitmap = null;
         IsCaptureAccepted = false;
         Close();
+    }
+
+    private void MoveCursorOutsideSelection(Rect selection)
+    {
+        var centerX = selection.Left + selection.Width / 2;
+        var centerY = selection.Top + selection.Height / 2;
+        var candidates = new[]
+        {
+            new Point(selection.Left - CursorClearance, centerY),
+            new Point(selection.Right + CursorClearance, centerY),
+            new Point(centerX, selection.Top - CursorClearance),
+            new Point(centerX, selection.Bottom + CursorClearance),
+            new Point(CursorClearance, CursorClearance)
+        };
+
+        Point? target = null;
+        foreach (var candidate in candidates)
+        {
+            if (IsInsideOverlay(candidate) && !selection.Contains(candidate))
+            {
+                target = candidate;
+                break;
+            }
+        }
+
+        if (target is null)
+        {
+            return;
+        }
+
+        var screenPoint = PointToScreen(target.Value);
+        System.Windows.Forms.Cursor.Position = new System.Drawing.Point(
+            (int)Math.Round(screenPoint.X),
+            (int)Math.Round(screenPoint.Y));
+    }
+
+    private bool IsInsideOverlay(Point point)
+    {
+        return point.X >= 0 &&
+               point.Y >= 0 &&
+               point.X <= ActualWidth &&
+               point.Y <= ActualHeight;
     }
 }
