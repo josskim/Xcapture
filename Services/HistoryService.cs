@@ -13,12 +13,13 @@ public static class HistoryService
         "XCapture",
         "History");
 
-    public static void Save(BitmapSource image)
+    public static string Save(BitmapSource image)
     {
         Directory.CreateDirectory(HistoryDirectory);
         var path = Path.Combine(HistoryDirectory, $"capture-{DateTime.Now:yyyyMMdd-HHmmss-fff}.png");
         FileService.SavePng(image, path);
         Prune();
+        return path;
     }
 
     public static IReadOnlyList<CaptureHistoryItem> Load()

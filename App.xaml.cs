@@ -152,8 +152,7 @@ public partial class App : Application
     {
         if (saveToHistory)
         {
-            HistoryService.Save(bitmap);
-            historyFilePath = null;
+            historyFilePath = HistoryService.Save(bitmap);
         }
 
         ClipboardService.TryCopyImage(bitmap);
