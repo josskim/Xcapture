@@ -73,7 +73,10 @@ public partial class App : Application
         {
             try
             {
-                var overlay = new CaptureOverlayWindow();
+                // Freeze the screen before the overlay takes focus so transient
+                // browser menus and popups remain visible in the capture.
+                var snapshot = ScreenCaptureService.CaptureAllScreens();
+                var overlay = new CaptureOverlayWindow(snapshot);
                 overlay.ShowDialog();
                 if (overlay.IsCaptureAccepted && overlay.CapturedBitmap is not null)
                 {

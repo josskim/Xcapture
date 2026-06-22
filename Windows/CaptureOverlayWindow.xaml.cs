@@ -1,8 +1,6 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
-using XCapture.Services;
 using Canvas = System.Windows.Controls.Canvas;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
@@ -12,18 +10,19 @@ namespace XCapture.Windows;
 
 public partial class CaptureOverlayWindow : Window
 {
-    private const double CursorClearance = 24;
-    private const int CaptureSettleDelayMilliseconds = 220;
-
+    private readonly BitmapSource _snapshot;
     private Point _startPoint;
     private bool _isDragging;
 
     public BitmapSource? CapturedBitmap { get; private set; }
     public bool IsCaptureAccepted { get; private set; }
 
-    public CaptureOverlayWindow()
+    public CaptureOverlayWindow(BitmapSource snapshot)
     {
+        _snapshot = snapshot;
         InitializeComponent();
+        SnapshotImage.Source = snapshot;
+
         Loaded += (_, _) =>
         {
             var bounds = System.Windows.Forms.Screen.AllScreens
@@ -36,12 +35,7 @@ public partial class CaptureOverlayWindow : Window
             Height = bounds.Height;
             Activate();
             Focus();
-            Dispatcher.BeginInvoke(() =>
-            {
-                Activate();
-                Focus();
-                Keyboard.Focus(this);
-            }, DispatcherPriority.ApplicationIdle);
+            Keyboard.Focus(this);
         };
     }
 
@@ -97,10 +91,19 @@ public partial class CaptureOverlayWindow : Window
             return;
         }
 
-        MoveCursorOutsideSelection(new Rect(x, y, width, height));
-        Hide();
-        Thread.Sleep(CaptureSettleDelayMilliseconds);
-        CapturedBitmap = ScreenCaptureService.CaptureWpfRect(new Rect(Left + x, Top + y, width, height));
+        var scaleX = _snapshot.PixelWidth / ActualWidth;
+        var scaleY = _snapshot.PixelHeight / ActualHeight;
+        var crop = new Int32Rect(
+            Math.Clamp((int)Math.Round(x * scaleX), 0, _snapshot.PixelWidth - 1),
+            Math.Clamp((int)Math.Round(y * scaleY), 0, _snapshot.PixelHeight - 1),
+            Math.Clamp((int)Math.Round(width * scaleX), 1, _snapshot.PixelWidth),
+            Math.Clamp((int)Math.Round(height * scaleY), 1, _snapshot.PixelHeight));
+
+        crop.Width = Math.Min(crop.Width, _snapshot.PixelWidth - crop.X);
+        crop.Height = Math.Min(crop.Height, _snapshot.PixelHeight - crop.Y);
+
+        CapturedBitmap = new CroppedBitmap(_snapshot, crop);
+        CapturedBitmap.Freeze();
         IsCaptureAccepted = true;
         Close();
     }
@@ -125,47 +128,5 @@ public partial class CaptureOverlayWindow : Window
         CapturedBitmap = null;
         IsCaptureAccepted = false;
         Close();
-    }
-
-    private void MoveCursorOutsideSelection(Rect selection)
-    {
-        var centerX = selection.Left + selection.Width / 2;
-        var centerY = selection.Top + selection.Height / 2;
-        var candidates = new[]
-        {
-            new Point(selection.Left - CursorClearance, centerY),
-            new Point(selection.Right + CursorClearance, centerY),
-            new Point(centerX, selection.Top - CursorClearance),
-            new Point(centerX, selection.Bottom + CursorClearance),
-            new Point(CursorClearance, CursorClearance)
-        };
-
-        Point? target = null;
-        foreach (var candidate in candidates)
-        {
-            if (IsInsideOverlay(candidate) && !selection.Contains(candidate))
-            {
-                target = candidate;
-                break;
-            }
-        }
-
-        if (target is null)
-        {
-            return;
-        }
-
-        var screenPoint = PointToScreen(target.Value);
-        System.Windows.Forms.Cursor.Position = new System.Drawing.Point(
-            (int)Math.Round(screenPoint.X),
-            (int)Math.Round(screenPoint.Y));
-    }
-
-    private bool IsInsideOverlay(Point point)
-    {
-        return point.X >= 0 &&
-               point.Y >= 0 &&
-               point.X <= ActualWidth &&
-               point.Y <= ActualHeight;
     }
 }

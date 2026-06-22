@@ -5,6 +5,7 @@ Simple Windows screen capture tool.
 ## Features
 
 - Region capture: `Ctrl+Shift+S` by default
+- Region capture freezes the screen first, preserving open browser menus and popups
 - Full screen capture: `Ctrl+Shift+A` by default
 - Customizable global capture shortcuts
 - Main window on app launch

@@ -7,27 +7,34 @@
         Topmost="True"
         AllowsTransparency="True"
         Focusable="True"
-        Background="#66000000"
+        Background="Black"
         Cursor="Cross"
         PreviewKeyDown="Window_PreviewKeyDown"
         MouseDown="Window_MouseDown"
         MouseMove="Window_MouseMove"
         MouseUp="Window_MouseUp">
-    <Canvas x:Name="RootCanvas">
-        <Border Canvas.Left="24"
-                Canvas.Top="22"
-                Background="#DD111827"
-                CornerRadius="6"
-                Padding="14,9">
-            <TextBlock Foreground="White"
-                       FontSize="15"
-                       FontWeight="SemiBold"
-                       Text="드래그해서 캡쳐할 영역을 선택하세요. Esc를 누르면 취소됩니다."/>
-        </Border>
-        <Rectangle x:Name="SelectionRect"
-                   Visibility="Collapsed"
-                   Stroke="#60A5FA"
-                   StrokeThickness="2"
-                   Fill="#22FFFFFF"/>
-    </Canvas>
+    <Grid>
+        <Image x:Name="SnapshotImage"
+               Stretch="Fill"
+               SnapsToDevicePixels="True"/>
+        <Rectangle Fill="#66000000"
+                   IsHitTestVisible="False"/>
+        <Canvas x:Name="RootCanvas">
+            <Border Canvas.Left="24"
+                    Canvas.Top="22"
+                    Background="#DD111827"
+                    CornerRadius="6"
+                    Padding="14,9">
+                <TextBlock Foreground="White"
+                           FontSize="15"
+                           FontWeight="SemiBold"
+                           Text="드래그해서 캡처할 영역을 선택하세요. Esc를 누르면 취소합니다."/>
+            </Border>
+            <Rectangle x:Name="SelectionRect"
+                       Visibility="Collapsed"
+                       Stroke="#60A5FA"
+                       StrokeThickness="2"
+                       Fill="#22FFFFFF"/>
+        </Canvas>
+    </Grid>
 </Window>
