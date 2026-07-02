@@ -13,7 +13,6 @@ using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 using Image = System.Windows.Controls.Image;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using PrintDialog = System.Windows.Controls.PrintDialog;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using Size = System.Windows.Size;
 
@@ -161,19 +160,11 @@ public partial class EditorWindow : Window
 
     private void PrintButton_Click(object sender, RoutedEventArgs e)
     {
-        var image = new Image
+        var preview = new PrintPreviewWindow(RenderEditedImage())
         {
-            Source = RenderEditedImage(),
-            Stretch = Stretch.Uniform
+            Owner = this
         };
-
-        var dialog = new PrintDialog();
-        if (dialog.ShowDialog() == true)
-        {
-            image.Width = dialog.PrintableAreaWidth;
-            image.Height = dialog.PrintableAreaHeight;
-            dialog.PrintVisual(image, "XCapture");
-        }
+        preview.ShowDialog();
     }
 
     private void UndoButton_Click(object sender, RoutedEventArgs e)
