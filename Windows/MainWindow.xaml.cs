@@ -13,6 +13,7 @@ public partial class MainWindow : Window
     private readonly Action _regionCapture;
     private readonly Action _fullScreenCapture;
     private readonly Action<BitmapSource, bool, string?> _openEditor;
+    private readonly Action _openImageDialog;
     private readonly Action _openSettings;
 
     public ObservableCollection<CaptureHistoryItem> HistoryItems { get; } = new();
@@ -21,6 +22,7 @@ public partial class MainWindow : Window
         Action regionCapture,
         Action fullScreenCapture,
         Action<BitmapSource, bool, string?> openEditor,
+        Action openImageDialog,
         Action openSettings,
         AppSettings settings)
     {
@@ -28,6 +30,7 @@ public partial class MainWindow : Window
         _regionCapture = regionCapture;
         _fullScreenCapture = fullScreenCapture;
         _openEditor = openEditor;
+        _openImageDialog = openImageDialog;
         _openSettings = openSettings;
         DataContext = this;
         UpdateShortcuts(settings);
@@ -71,6 +74,11 @@ public partial class MainWindow : Window
     private async void UpdateButton_Click(object sender, RoutedEventArgs e)
     {
         await UpdateService.CheckForUpdatesAsync(this, showUpToDateMessage: true);
+    }
+
+    private void ImageViewerButton_Click(object sender, RoutedEventArgs e)
+    {
+        _openImageDialog();
     }
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e)

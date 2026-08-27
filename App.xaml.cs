@@ -1,9 +1,12 @@
+using Microsoft.Win32;
+using System.IO;
 using System.Windows;
 using XCapture.Models;
 using XCapture.Services;
 using XCapture.Windows;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 
 namespace XCapture;
 
@@ -13,6 +16,7 @@ public partial class App : Application
     private TrayService? _tray;
     private MainWindow? _mainWindow;
     private EditorWindow? _editorWindow;
+    private ImageViewerWindow? _imageViewerWindow;
     private AppSettings _settings = new();
     private SingleInstanceService? _singleInstance;
 
@@ -22,11 +26,12 @@ public partial class App : Application
         _singleInstance = new SingleInstanceService();
         if (!_singleInstance.IsPrimaryInstance)
         {
+            _singleInstance.RequestActivation(e.Args);
             Shutdown();
             return;
         }
 
-        _singleInstance.ActivationRequested += ShowMainWindow;
+        _singleInstance.ActivationRequested += HandleActivationRequest;
         _singleInstance.StartListening();
 
         DispatcherUnhandledException += (_, args) =>
@@ -41,7 +46,7 @@ public partial class App : Application
         };
 
         _settings = SettingsService.Load();
-        _mainWindow = new MainWindow(StartRegionCapture, StartFullScreenCapture, OpenEditor, OpenSettings, _settings);
+        _mainWindow = new MainWindow(StartRegionCapture, StartFullScreenCapture, OpenEditor, OpenImageDialog, OpenSettings, _settings);
         MainWindow = _mainWindow;
 
         _tray = new TrayService(
@@ -63,8 +68,18 @@ public partial class App : Application
         }
 
         _tray.Show();
-        _mainWindow.ShowAndActivate();
-        _ = UpdateService.CheckForUpdatesAsync(_mainWindow);
+        var startupImages = ImageFileService.NormalizeExistingImages(e.Args);
+        if (startupImages.Count > 0)
+        {
+            OpenImageViewer(startupImages[0], startupImages.Count > 1 ? startupImages : null);
+        }
+        else
+        {
+            _mainWindow.ShowAndActivate();
+        }
+
+        Window updateOwner = _imageViewerWindow is not null ? _imageViewerWindow : _mainWindow;
+        _ = UpdateService.CheckForUpdatesAsync(updateOwner);
     }
 
     private void StartRegionCapture()
@@ -115,6 +130,58 @@ public partial class App : Application
     private void ShowMainWindow()
     {
         Dispatcher.Invoke(() => _mainWindow?.ShowAndActivate());
+    }
+
+    private void HandleActivationRequest(IReadOnlyList<string> arguments)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            var images = ImageFileService.NormalizeExistingImages(arguments);
+            if (images.Count > 0)
+            {
+                OpenImageViewer(images[0], images.Count > 1 ? images : null);
+                return;
+            }
+
+            ShowMainWindow();
+        });
+    }
+
+    private void OpenImageDialog()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Filter = ImageFileService.OpenDialogFilter,
+            Multiselect = true,
+            CheckFileExists = true
+        };
+        if (dialog.ShowDialog(_mainWindow) == true && dialog.FileNames.Length > 0)
+        {
+            OpenImageViewer(dialog.FileNames[0], dialog.FileNames);
+        }
+    }
+
+    private void OpenImageViewer(string path, IReadOnlyList<string>? imagePaths = null)
+    {
+        try
+        {
+            if (_imageViewerWindow is null)
+            {
+                _imageViewerWindow = new ImageViewerWindow((image, sourcePath) => OpenEditor(image, false, sourcePath));
+                _imageViewerWindow.Closed += (_, _) => _imageViewerWindow = null;
+            }
+
+            _imageViewerWindow.OpenImage(path, imagePaths);
+        }
+        catch (Exception exc)
+        {
+            LogService.Error(exc, $"Failed to open image viewer: {path}");
+            MessageBox.Show(
+                $"이미지를 열 수 없습니다.\n\n{Path.GetFileName(path)}\n\n로그: {LogService.LogPath}",
+                "XCapture 이미지 뷰어",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
     }
 
     private void OpenSettings()
@@ -188,6 +255,7 @@ public partial class App : Application
         _tray?.Dispose();
         _singleInstance?.Dispose();
         _editorWindow = null;
+        _imageViewerWindow = null;
         _mainWindow = null;
         base.OnExit(e);
     }

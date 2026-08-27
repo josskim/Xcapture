@@ -15,6 +15,11 @@ Simple Windows screen capture tool.
 - PNG save
 - Print
 - System tray menu
+- Image viewer for PNG, JPEG, BMP, GIF and TIFF files
+- Fit-to-window, actual-size and zoom controls
+- Previous/next navigation across images in the same folder
+- File drag-and-drop and direct editing from the viewer
+- Installer registration in Windows Open with and image right-click menus
 
 ## Run
 
