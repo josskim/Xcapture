@@ -58,6 +58,9 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <ContextMenu x:Key="ImageContextMenu" x:Shared="False">
+            <MenuItem Header="이미지 복사" Click="CopyContextMenuItem_Click"/>
+        </ContextMenu>
     </Window.Resources>
 
     <DockPanel>
@@ -136,10 +139,13 @@
                     <ScaleTransform x:Name="CaptureScale" ScaleX="1" ScaleY="1"/>
                 </Grid.LayoutTransform>
                 <Image x:Name="CaptureImage"
+                       ContextMenu="{StaticResource ImageContextMenu}"
                        Stretch="Fill"
                        SnapsToDevicePixels="True"
                        RenderOptions.BitmapScalingMode="Fant"/>
-                <InkCanvas x:Name="InkLayer" Background="Transparent"/>
+                <InkCanvas x:Name="InkLayer"
+                           Background="Transparent"
+                           ContextMenu="{StaticResource ImageContextMenu}"/>
             </Grid>
         </ScrollViewer>
     </DockPanel>

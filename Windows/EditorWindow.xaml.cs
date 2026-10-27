@@ -144,17 +144,24 @@ public partial class EditorWindow : Window
         ClipboardService.TryCopyImage(RenderEditedImage());
     }
 
+    private void CopyContextMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        CopyButton_Click(sender, e);
+    }
+
     private void SaveButton_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new SaveFileDialog
         {
-            Filter = "PNG 이미지 (*.png)|*.png",
-            FileName = $"xcapture-{DateTime.Now:yyyyMMdd-HHmmss}.png"
+            Filter = "JPEG 이미지 (*.jpg;*.jpeg)|*.jpg;*.jpeg|PNG 이미지 (*.png)|*.png",
+            DefaultExt = ".jpg",
+            AddExtension = true,
+            FileName = $"xcapture-{DateTime.Now:yyyyMMdd-HHmmss}.jpg"
         };
 
         if (dialog.ShowDialog() == true)
         {
-            FileService.SavePng(RenderEditedImage(), dialog.FileName);
+            FileService.SaveImage(RenderEditedImage(), dialog.FileName);
         }
     }
 

@@ -65,7 +65,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Text="최근 캡쳐 20개"
+            <TextBlock Text="최근 캡쳐 50개"
                        FontSize="17"
                        FontWeight="SemiBold"
                        Foreground="#111827"

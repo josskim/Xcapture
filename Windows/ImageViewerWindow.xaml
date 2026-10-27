@@ -24,6 +24,9 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
+        <ContextMenu x:Key="ImageContextMenu" x:Shared="False">
+            <MenuItem Header="이미지 복사" Click="CopyContextMenuItem_Click"/>
+        </ContextMenu>
     </Window.Resources>
 
     <DockPanel>
@@ -100,6 +103,7 @@
                         BorderBrush="#374151"
                         BorderThickness="1">
                     <Image x:Name="ViewerImage"
+                           ContextMenu="{StaticResource ImageContextMenu}"
                            Stretch="Fill"
                            SnapsToDevicePixels="True"
                            RenderOptions.BitmapScalingMode="HighQuality"/>

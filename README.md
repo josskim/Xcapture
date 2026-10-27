@@ -9,10 +9,10 @@ Simple Windows screen capture tool.
 - Full screen capture: `Ctrl+Shift+A` by default
 - Customizable global capture shortcuts
 - Main window on app launch
-- Recent capture history: latest 20 images
+- Recent capture history: latest 50 images
 - Auto-copy captured image to clipboard
 - Pen and eraser markup
-- PNG save
+- JPEG save by default, with PNG option
 - Print
 - System tray menu
 - Image viewer for PNG, JPEG, BMP, GIF and TIFF files

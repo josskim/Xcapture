@@ -173,6 +173,11 @@ public partial class ImageViewerWindow : Window
         }
     }
 
+    private void CopyContextMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        CopyButton_Click(sender, e);
+    }
+
     private void OpenLocationButton_Click(object sender, RoutedEventArgs e)
     {
         if (_currentIndex < 0)

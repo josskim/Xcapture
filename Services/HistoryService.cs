@@ -6,7 +6,7 @@ namespace XCapture.Services;
 
 public static class HistoryService
 {
-    private const int MaxItems = 20;
+    private const int MaxItems = 50;
 
     private static readonly string HistoryDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
