@@ -135,11 +135,12 @@ public partial class App : Application
         {
             if (_mainWindow?.IsActive == true) _mainWindow.WindowState = WindowState.Minimized;
             await Task.Delay(300);
-            var overlay = new CaptureOverlayWindow(ScreenCaptureService.CaptureAllScreens());
+            var overlay = new CaptureOverlayWindow(ScreenCaptureService.CaptureAllScreens(), scrollCapture: true);
             overlay.ShowDialog();
             if (!overlay.IsCaptureAccepted) return;
             await Task.Delay(350);
-            var (image, warning) = await ScrollCaptureService.CaptureAsync(overlay.SelectedScreenBounds);
+            var bounds = ScrollCaptureTarget.Resolve(overlay.SelectedScreenBounds);
+            var (image, warning) = await ScrollCaptureService.CaptureAsync(bounds, overlay.SelectedScreenBounds);
             CaptureSoundService.PlayShutter();
             OpenEditor(image);
             _mainWindow?.RefreshHistory();
@@ -148,7 +149,7 @@ public partial class App : Application
         catch (Exception exc)
         {
             LogService.Error(exc, "Scroll capture failed");
-            MessageBox.Show("스크롤 캡처 중 오류가 발생했습니다. 캡처할 영역을 다시 선택해주세요.", "XCapture");
+            MessageBox.Show($"스크롤 캡처 중 오류가 발생했습니다.\n\n{exc.Message}", "XCapture");
         }
     }
 

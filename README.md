@@ -7,7 +7,7 @@ Simple Windows screen capture tool.
 - Region capture: `Ctrl+Shift+S` by default
 - Region capture freezes the screen first, preserving open browser menus and popups
 - Full screen capture: `Ctrl+Shift+A` by default
-- Scroll capture: `Ctrl+Shift+D` by default; select the scrollable content area and XCapture captures successive scroll positions
+- Scroll capture: `Ctrl+Shift+D` by default; select a Chrome or Edge page and XCapture captures the full visible page width from top to bottom
 - Customizable global capture shortcuts
 - Main window on app launch
 - Recent capture history: latest 50 images
@@ -17,7 +17,7 @@ Simple Windows screen capture tool.
 - Print
 - System tray menu
 - XViewer for PNG, JPEG, BMP, GIF and TIFF files
-- Combine selected images vertically without resizing or save as a multipage PDF; change the order before saving
+- Combine selected images vertically without resizing or save as a multipage PDF; preview and change the order before saving
 - Resize and convert images to JPEG, PNG or BMP; control JPEG quality
 - Fit-to-window, actual-size and zoom controls
 - Previous/next navigation across images in the same folder

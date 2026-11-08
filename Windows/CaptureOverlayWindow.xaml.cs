@@ -18,10 +18,11 @@ public partial class CaptureOverlayWindow : Window
     public bool IsCaptureAccepted { get; private set; }
     public System.Drawing.Rectangle SelectedScreenBounds { get; private set; }
 
-    public CaptureOverlayWindow(BitmapSource snapshot)
+    public CaptureOverlayWindow(BitmapSource snapshot, bool scrollCapture = false)
     {
         _snapshot = snapshot;
         InitializeComponent();
+        if (scrollCapture) InstructionText.Text = "Chrome 또는 Edge의 스크롤할 페이지 안쪽을 드래그하세요. 페이지 전체 너비를 캡처합니다. Esc: 취소";
         SnapshotImage.Source = snapshot;
 
         Loaded += (_, _) =>
