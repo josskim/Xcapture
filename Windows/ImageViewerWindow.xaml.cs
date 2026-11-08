@@ -99,7 +99,7 @@ public partial class ImageViewerWindow : Window
     {
         var file = new FileInfo(path);
         FileNameText.Text = file.Name;
-        Title = $"{file.Name} - XCapture 이미지 뷰어";
+        Title = $"{file.Name} - XViewer";
         ImageInfoText.Text = _currentImage is null
             ? file.FullName
             : $"{_currentImage.PixelWidth:N0} × {_currentImage.PixelHeight:N0} · {FormatFileSize(file.Length)} · {file.FullName}";
@@ -191,6 +191,37 @@ public partial class ImageViewerWindow : Window
             Arguments = $"/select,\"{_imagePaths[_currentIndex]}\"",
             UseShellExecute = true
         });
+    }
+
+    private void MergeButton_Click(object sender, RoutedEventArgs e)
+    {
+        var open = new OpenFileDialog { Filter = ImageFileService.OpenDialogFilter, Multiselect = true, CheckFileExists = true, Title = "합칠 이미지 선택 (파일 이름순)" };
+        if (open.ShowDialog(this) != true || open.FileNames.Length == 0) return;
+        var order = new ImageMergeOrderWindow(open.FileNames.OrderBy(x => Path.GetFileName(x), StringComparer.CurrentCultureIgnoreCase)) { Owner = this };
+        if (order.ShowDialog() != true) return;
+        var paths = order.Paths;
+        var save = new Microsoft.Win32.SaveFileDialog { Filter = "JPEG 이미지 (*.jpg)|*.jpg|PNG 이미지 (*.png)|*.png|PDF 문서 (*.pdf)|*.pdf", AddExtension = true, FileName = "merged" };
+        if (save.ShowDialog(this) != true) return;
+        if (paths.Any(path => string.Equals(Path.GetFullPath(path), Path.GetFullPath(save.FileName), StringComparison.OrdinalIgnoreCase)))
+        {
+            MessageBox.Show(this, "원본 이미지와 다른 이름으로 저장해주세요.", "XViewer");
+            return;
+        }
+        try
+        {
+            var images = paths.Select(ImageFileService.LoadImage).ToArray();
+            if (Path.GetExtension(save.FileName).Equals(".pdf", StringComparison.OrdinalIgnoreCase)) ImageOperations.SavePdf(images, save.FileName);
+            else ImageOperations.Save(ImageOperations.MergeVertical(images), save.FileName, 95);
+            MessageBox.Show(this, $"{images.Length}개 이미지를 저장했습니다.\n{save.FileName}", "XViewer");
+        }
+        catch (Exception ex) { LogService.Error(ex, "Image merge failed"); MessageBox.Show(this, $"이미지를 합칠 수 없습니다.\n{ex.Message}", "XViewer"); }
+    }
+
+    private void ConvertButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentImage is null) return;
+        var dialog = new ImageConvertWindow(_currentImage, _imagePaths[_currentIndex]) { Owner = this };
+        dialog.ShowDialog();
     }
 
     private void PreviousButton_Click(object sender, RoutedEventArgs e) => Navigate(-1);

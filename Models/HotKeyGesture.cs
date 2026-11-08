@@ -7,6 +7,7 @@ public sealed record HotKeyGesture(bool Control, bool Shift, bool Alt, bool Wind
 {
     public static HotKeyGesture DefaultRegion { get; } = new(true, true, false, false, Key.S);
     public static HotKeyGesture DefaultFullScreen { get; } = new(true, true, false, false, Key.A);
+    public static HotKeyGesture DefaultScroll { get; } = new(true, true, false, false, Key.D);
 
     [JsonIgnore]
     public bool HasModifier => Control || Shift || Alt || Windows;

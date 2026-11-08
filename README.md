@@ -7,6 +7,7 @@ Simple Windows screen capture tool.
 - Region capture: `Ctrl+Shift+S` by default
 - Region capture freezes the screen first, preserving open browser menus and popups
 - Full screen capture: `Ctrl+Shift+A` by default
+- Scroll capture: `Ctrl+Shift+D` by default; select the scrollable content area and XCapture captures successive scroll positions
 - Customizable global capture shortcuts
 - Main window on app launch
 - Recent capture history: latest 50 images
@@ -15,7 +16,9 @@ Simple Windows screen capture tool.
 - JPEG save by default, with PNG option
 - Print
 - System tray menu
-- Image viewer for PNG, JPEG, BMP, GIF and TIFF files
+- XViewer for PNG, JPEG, BMP, GIF and TIFF files
+- Combine selected images vertically without resizing or save as a multipage PDF; change the order before saving
+- Resize and convert images to JPEG, PNG or BMP; control JPEG quality
 - Fit-to-window, actual-size and zoom controls
 - Previous/next navigation across images in the same folder
 - File drag-and-drop and direct editing from the viewer
@@ -24,7 +27,7 @@ Simple Windows screen capture tool.
 ## Run
 
 ```powershell
-cd E:\dev\xcapture
+cd D:\dev\xcapture
 dotnet run
 ```
 
@@ -34,19 +37,19 @@ dotnet run
 dotnet publish -c Release -r win-x64 --self-contained true `
   -p:PublishSingleFile=true `
   -p:IncludeNativeLibrariesForSelfExtract=true `
-  -o E:\dev\xcapture\publish-latest
+  -o D:\dev\xcapture\publish-latest
 ```
 
 ## Build Installer
 
 ```powershell
-& "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" .\Installer\xcapture.iss
+& "D:\dev\.tools\Inno\ISCC.exe" .\Installer\xcapture.iss
 ```
 
 Output:
 
 ```text
-E:\dev\xcapture\Installer\XCaptureSetup.exe
+D:\dev\xcapture\Installer\XCaptureSetup.exe
 ```
 
 ## Update Existing PCs

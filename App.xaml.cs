@@ -46,18 +46,20 @@ public partial class App : Application
         };
 
         _settings = SettingsService.Load();
-        _mainWindow = new MainWindow(StartRegionCapture, StartFullScreenCapture, OpenEditor, OpenImageDialog, OpenSettings, _settings);
+        _mainWindow = new MainWindow(StartRegionCapture, StartFullScreenCapture, StartScrollCapture, OpenEditor, OpenImageDialog, OpenSettings, _settings);
         MainWindow = _mainWindow;
 
         _tray = new TrayService(
             ShowMainWindow,
             StartRegionCapture,
             StartFullScreenCapture,
+            StartScrollCapture,
             Shutdown,
             _settings);
         _hotKeys = new HotKeyManager();
         _hotKeys.RegionCapturePressed += StartRegionCapture;
         _hotKeys.FullScreenCapturePressed += StartFullScreenCapture;
+        _hotKeys.ScrollCapturePressed += StartScrollCapture;
         if (!_hotKeys.Register(_settings))
         {
             MessageBox.Show(
@@ -125,6 +127,29 @@ public partial class App : Application
                 MessageBox.Show($"캡쳐 중 오류가 발생했습니다.\n\n로그: {LogService.LogPath}", "XCapture");
             }
         });
+    }
+
+    private async void StartScrollCapture()
+    {
+        try
+        {
+            if (_mainWindow?.IsActive == true) _mainWindow.WindowState = WindowState.Minimized;
+            await Task.Delay(300);
+            var overlay = new CaptureOverlayWindow(ScreenCaptureService.CaptureAllScreens());
+            overlay.ShowDialog();
+            if (!overlay.IsCaptureAccepted) return;
+            await Task.Delay(350);
+            var (image, warning) = await ScrollCaptureService.CaptureAsync(overlay.SelectedScreenBounds);
+            CaptureSoundService.PlayShutter();
+            OpenEditor(image);
+            _mainWindow?.RefreshHistory();
+            if (warning is not null) MessageBox.Show(warning, "스크롤 캡처", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        catch (Exception exc)
+        {
+            LogService.Error(exc, "Scroll capture failed");
+            MessageBox.Show("스크롤 캡처 중 오류가 발생했습니다. 캡처할 영역을 다시 선택해주세요.", "XCapture");
+        }
     }
 
     private void ShowMainWindow()

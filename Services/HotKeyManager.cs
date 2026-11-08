@@ -10,6 +10,7 @@ public sealed class HotKeyManager : IDisposable
 {
     private const int RegionCaptureId = 9001;
     private const int FullScreenCaptureId = 9002;
+    private const int ScrollCaptureId = 9003;
     private const int WmHotKey = 0x0312;
     private const uint ModAlt = 0x0001;
     private const uint ModControl = 0x0002;
@@ -23,6 +24,7 @@ public sealed class HotKeyManager : IDisposable
 
     public event Action? RegionCapturePressed;
     public event Action? FullScreenCapturePressed;
+    public event Action? ScrollCapturePressed;
 
     public bool Register(AppSettings settings)
     {
@@ -60,7 +62,8 @@ public sealed class HotKeyManager : IDisposable
         UnregisterCurrent();
 
         if (RegisterGesture(RegionCaptureId, settings.RegionCaptureHotKey) &&
-            RegisterGesture(FullScreenCaptureId, settings.FullScreenCaptureHotKey))
+            RegisterGesture(FullScreenCaptureId, settings.FullScreenCaptureHotKey) &&
+            RegisterGesture(ScrollCaptureId, settings.ScrollCaptureHotKey))
         {
             _settings = settings;
             _hasRegisteredSettings = true;
@@ -70,7 +73,8 @@ public sealed class HotKeyManager : IDisposable
         UnregisterCurrent();
         if (hadPreviousRegistration &&
             RegisterGesture(RegionCaptureId, previous.RegionCaptureHotKey) &&
-            RegisterGesture(FullScreenCaptureId, previous.FullScreenCaptureHotKey))
+            RegisterGesture(FullScreenCaptureId, previous.FullScreenCaptureHotKey) &&
+            RegisterGesture(ScrollCaptureId, previous.ScrollCaptureHotKey))
         {
             _hasRegisteredSettings = true;
         }
@@ -96,6 +100,11 @@ public sealed class HotKeyManager : IDisposable
         else if (id == FullScreenCaptureId)
         {
             FullScreenCapturePressed?.Invoke();
+            handled = true;
+        }
+        else if (id == ScrollCaptureId)
+        {
+            ScrollCapturePressed?.Invoke();
             handled = true;
         }
 
@@ -135,6 +144,7 @@ public sealed class HotKeyManager : IDisposable
 
         UnregisterHotKey(_source.Handle, RegionCaptureId);
         UnregisterHotKey(_source.Handle, FullScreenCaptureId);
+        UnregisterHotKey(_source.Handle, ScrollCaptureId);
     }
 
     private static uint GetModifiers(HotKeyGesture gesture)

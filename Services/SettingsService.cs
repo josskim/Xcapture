@@ -30,7 +30,10 @@ public static class SettingsService
             if (settings is null ||
                 !IsValid(settings.RegionCaptureHotKey) ||
                 !IsValid(settings.FullScreenCaptureHotKey) ||
-                settings.RegionCaptureHotKey == settings.FullScreenCaptureHotKey)
+                !IsValid(settings.ScrollCaptureHotKey) ||
+                settings.RegionCaptureHotKey == settings.FullScreenCaptureHotKey ||
+                settings.RegionCaptureHotKey == settings.ScrollCaptureHotKey ||
+                settings.FullScreenCaptureHotKey == settings.ScrollCaptureHotKey)
             {
                 return new AppSettings();
             }

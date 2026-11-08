@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="XCapture 설정"
         Width="440"
-        Height="300"
+        Height="355"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="#F3F4F6">
@@ -48,6 +48,8 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="12"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="12"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <TextBlock Text="영역 캡쳐"
@@ -69,6 +71,8 @@
                      Grid.Column="1"
                      Style="{StaticResource HotKeyBoxStyle}"
                      PreviewKeyDown="HotKeyBox_PreviewKeyDown"/>
+            <TextBlock Grid.Row="4" Text="스크롤 캡쳐" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#334155"/>
+            <TextBox x:Name="ScrollHotKeyBox" Grid.Row="4" Grid.Column="1" Style="{StaticResource HotKeyBoxStyle}" PreviewKeyDown="HotKeyBox_PreviewKeyDown"/>
         </Grid>
 
         <StackPanel Grid.Row="4"

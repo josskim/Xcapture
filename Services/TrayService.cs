@@ -10,12 +10,14 @@ public sealed class TrayService : IDisposable
     private readonly NotifyIcon _notifyIcon;
     private readonly ToolStripMenuItem _regionCaptureItem;
     private readonly ToolStripMenuItem _fullScreenCaptureItem;
+    private readonly ToolStripMenuItem _scrollCaptureItem;
     private AppSettings _settings;
 
     public TrayService(
         Action showMain,
         Action regionCapture,
         Action fullScreenCapture,
+        Action scrollCapture,
         Action exit,
         AppSettings settings)
     {
@@ -24,8 +26,10 @@ public sealed class TrayService : IDisposable
         menu.Items.Add("XCapture 열기", null, (_, _) => showMain());
         _regionCaptureItem = new ToolStripMenuItem("", null, (_, _) => regionCapture());
         _fullScreenCaptureItem = new ToolStripMenuItem("", null, (_, _) => fullScreenCapture());
+        _scrollCaptureItem = new ToolStripMenuItem("", null, (_, _) => scrollCapture());
         menu.Items.Add(_regionCaptureItem);
         menu.Items.Add(_fullScreenCaptureItem);
+        menu.Items.Add(_scrollCaptureItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("종료", null, (_, _) => exit());
 
@@ -62,6 +66,7 @@ public sealed class TrayService : IDisposable
         _settings = settings;
         _regionCaptureItem.Text = $"영역 캡쳐 ({settings.RegionCaptureHotKey.DisplayText})";
         _fullScreenCaptureItem.Text = $"전체 화면 캡쳐 ({settings.FullScreenCaptureHotKey.DisplayText})";
+        _scrollCaptureItem.Text = $"스크롤 캡쳐 ({settings.ScrollCaptureHotKey.DisplayText})";
     }
 
     private static Icon LoadTrayIcon()

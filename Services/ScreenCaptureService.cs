@@ -28,7 +28,7 @@ public static class ScreenCaptureService
         return CaptureRectangle(bounds);
     }
 
-    private static BitmapSource CaptureRectangle(Rectangle bounds)
+    public static BitmapSource CaptureRectangle(Rectangle bounds)
     {
         using var bitmap = new Bitmap(bounds.Width, bounds.Height);
         using var graphics = Graphics.FromImage(bitmap);

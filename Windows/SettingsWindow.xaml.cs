@@ -10,6 +10,7 @@ public partial class SettingsWindow : Window
 {
     private HotKeyGesture _regionHotKey;
     private HotKeyGesture _fullScreenHotKey;
+    private HotKeyGesture _scrollHotKey;
 
     public AppSettings? Result { get; private set; }
 
@@ -18,6 +19,7 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         _regionHotKey = settings.RegionCaptureHotKey;
         _fullScreenHotKey = settings.FullScreenCaptureHotKey;
+        _scrollHotKey = settings.ScrollCaptureHotKey;
         RefreshTexts();
     }
 
@@ -52,9 +54,13 @@ public partial class SettingsWindow : Window
         {
             _regionHotKey = gesture;
         }
-        else
+        else if (ReferenceEquals(sender, FullScreenHotKeyBox))
         {
             _fullScreenHotKey = gesture;
+        }
+        else
+        {
+            _scrollHotKey = gesture;
         }
 
         RefreshTexts();
@@ -64,6 +70,7 @@ public partial class SettingsWindow : Window
     {
         _regionHotKey = HotKeyGesture.DefaultRegion;
         _fullScreenHotKey = HotKeyGesture.DefaultFullScreen;
+        _scrollHotKey = HotKeyGesture.DefaultScroll;
         RefreshTexts();
     }
 
@@ -74,16 +81,17 @@ public partial class SettingsWindow : Window
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_regionHotKey == _fullScreenHotKey)
+        if (_regionHotKey == _fullScreenHotKey || _regionHotKey == _scrollHotKey || _fullScreenHotKey == _scrollHotKey)
         {
-            MessageBox.Show(this, "영역 캡쳐와 전체화면 캡쳐는 서로 다른 단축키를 지정해주세요.", "XCapture");
+            MessageBox.Show(this, "캡쳐 단축키를 서로 다르게 지정해주세요.", "XCapture");
             return;
         }
 
         Result = new AppSettings
         {
             RegionCaptureHotKey = _regionHotKey,
-            FullScreenCaptureHotKey = _fullScreenHotKey
+            FullScreenCaptureHotKey = _fullScreenHotKey,
+            ScrollCaptureHotKey = _scrollHotKey
         };
         DialogResult = true;
     }
@@ -92,5 +100,6 @@ public partial class SettingsWindow : Window
     {
         RegionHotKeyBox.Text = _regionHotKey.DisplayText;
         FullScreenHotKeyBox.Text = _fullScreenHotKey.DisplayText;
+        ScrollHotKeyBox.Text = _scrollHotKey.DisplayText;
     }
 }

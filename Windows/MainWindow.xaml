@@ -39,22 +39,23 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel>
+                <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="XCapture"
                                FontSize="22"
                                FontWeight="Bold"
                                Foreground="#111827"/>
                     <TextBlock x:Name="ShortcutText"
-                               Text="Ctrl+Shift+S 영역 캡쳐, Ctrl+Shift+A 전체화면캡쳐"
+                               Text="캡쳐 단축키"
                                Margin="0,4,0,0"
-                               Foreground="#6B7280"/>
+                               Foreground="#6B7280" TextWrapping="Wrap"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="영역 캡쳐" Click="RegionCaptureButton_Click" Style="{StaticResource PrimaryButtonStyle}"/>
-                    <Button Content="전체화면캡쳐" Click="FullScreenCaptureButton_Click" Style="{StaticResource SecondaryButtonStyle}"/>
-                    <Button Content="이미지 보기" Click="ImageViewerButton_Click" Style="{StaticResource SecondaryButtonStyle}" MinWidth="110"/>
-                    <Button Content="업데이트" Click="UpdateButton_Click" Style="{StaticResource SecondaryButtonStyle}"/>
-                    <Button Content="설정" Click="SettingsButton_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0"/>
+                    <Button Content="영역" Click="RegionCaptureButton_Click" Style="{StaticResource PrimaryButtonStyle}" MinWidth="65" Padding="8,0"/>
+                    <Button Content="전체" Click="FullScreenCaptureButton_Click" Style="{StaticResource SecondaryButtonStyle}" MinWidth="65" Padding="8,0"/>
+                    <Button Content="스크롤" Click="ScrollCaptureButton_Click" Style="{StaticResource SecondaryButtonStyle}" MinWidth="70" Padding="8,0"/>
+                    <Button Content="이미지 보기" Click="ImageViewerButton_Click" Style="{StaticResource SecondaryButtonStyle}" MinWidth="85" Padding="8,0"/>
+                    <Button Content="설정" Click="SettingsButton_Click" Style="{StaticResource SecondaryButtonStyle}" MinWidth="60" Padding="8,0"/>
+                    <Button Content="업데이트" Click="UpdateButton_Click" Style="{StaticResource SecondaryButtonStyle}" MinWidth="76" Padding="8,0" Margin="0"/>
                 </StackPanel>
             </Grid>
         </Border>

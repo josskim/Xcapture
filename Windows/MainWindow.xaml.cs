@@ -12,6 +12,7 @@ public partial class MainWindow : Window
 {
     private readonly Action _regionCapture;
     private readonly Action _fullScreenCapture;
+    private readonly Action _scrollCapture;
     private readonly Action<BitmapSource, bool, string?> _openEditor;
     private readonly Action _openImageDialog;
     private readonly Action _openSettings;
@@ -21,6 +22,7 @@ public partial class MainWindow : Window
     public MainWindow(
         Action regionCapture,
         Action fullScreenCapture,
+        Action scrollCapture,
         Action<BitmapSource, bool, string?> openEditor,
         Action openImageDialog,
         Action openSettings,
@@ -29,6 +31,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         _regionCapture = regionCapture;
         _fullScreenCapture = fullScreenCapture;
+        _scrollCapture = scrollCapture;
         _openEditor = openEditor;
         _openImageDialog = openImageDialog;
         _openSettings = openSettings;
@@ -71,6 +74,11 @@ public partial class MainWindow : Window
         _fullScreenCapture();
     }
 
+    private void ScrollCaptureButton_Click(object sender, RoutedEventArgs e)
+    {
+        _scrollCapture();
+    }
+
     private async void UpdateButton_Click(object sender, RoutedEventArgs e)
     {
         await UpdateService.CheckForUpdatesAsync(this, showUpToDateMessage: true);
@@ -90,7 +98,7 @@ public partial class MainWindow : Window
     {
         ShortcutText.Text =
             $"{settings.RegionCaptureHotKey.DisplayText} 영역 캡쳐, " +
-            $"{settings.FullScreenCaptureHotKey.DisplayText} 전체화면캡쳐";
+            $"{settings.FullScreenCaptureHotKey.DisplayText} 전체, {settings.ScrollCaptureHotKey.DisplayText} 스크롤";
     }
 
     private void HistoryList_MouseDoubleClick(object sender, MouseButtonEventArgs e)

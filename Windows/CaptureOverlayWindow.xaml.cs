@@ -16,6 +16,7 @@ public partial class CaptureOverlayWindow : Window
 
     public BitmapSource? CapturedBitmap { get; private set; }
     public bool IsCaptureAccepted { get; private set; }
+    public System.Drawing.Rectangle SelectedScreenBounds { get; private set; }
 
     public CaptureOverlayWindow(BitmapSource snapshot)
     {
@@ -101,6 +102,9 @@ public partial class CaptureOverlayWindow : Window
 
         crop.Width = Math.Min(crop.Width, _snapshot.PixelWidth - crop.X);
         crop.Height = Math.Min(crop.Height, _snapshot.PixelHeight - crop.Y);
+
+        var virtualBounds = System.Windows.Forms.Screen.AllScreens.Select(screen => screen.Bounds).Aggregate(System.Drawing.Rectangle.Union);
+        SelectedScreenBounds = new System.Drawing.Rectangle(virtualBounds.Left + crop.X, virtualBounds.Top + crop.Y, crop.Width, crop.Height);
 
         CapturedBitmap = new CroppedBitmap(_snapshot, crop);
         CapturedBitmap.Freeze();
