@@ -25,7 +25,7 @@ public partial class ImageViewerWindow
     {
         InkLayer.Strokes.StrokesChanged += StrokesChanged;
         UpdateDrawingAttributes();
-        SetTool(InkCanvasEditingMode.None);
+        SetTool(InkCanvasEditingMode.Ink);
     }
 
     private void ResetEditing()
@@ -36,6 +36,7 @@ public partial class ImageViewerWindow
         _undo.Clear();
         _lastStrokes = new StrokeCollection();
         _hasUnsavedEdits = false;
+        SetTool(InkCanvasEditingMode.Ink);
     }
 
     private void StrokesChanged(object? sender, StrokeCollectionChangedEventArgs e)

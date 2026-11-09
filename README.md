@@ -13,7 +13,8 @@ Simple Windows screen capture tool.
 - Recent capture history: latest 50 images
 - Auto-copy captured image to clipboard
 - Capture results and regular images open in the same XViewer window
-- Pen and eraser markup in XViewer; prompts before discarding unsaved edits
+- XViewer opens capture images with the pen tool selected; pen and eraser markup with hover-readable toolbar buttons
+- Prompts before discarding unsaved edits
 - JPEG save by default, with PNG option
 - Print
 - System tray menu
