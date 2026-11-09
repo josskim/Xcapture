@@ -15,7 +15,6 @@ public partial class App : Application
     private HotKeyManager? _hotKeys;
     private TrayService? _tray;
     private MainWindow? _mainWindow;
-    private EditorWindow? _editorWindow;
     private ImageViewerWindow? _imageViewerWindow;
     private AppSettings _settings = new();
     private SingleInstanceService? _singleInstance;
@@ -46,7 +45,7 @@ public partial class App : Application
         };
 
         _settings = SettingsService.Load();
-        _mainWindow = new MainWindow(StartRegionCapture, StartFullScreenCapture, StartScrollCapture, OpenEditor, OpenImageDialog, OpenSettings, _settings);
+        _mainWindow = new MainWindow(StartRegionCapture, StartFullScreenCapture, StartScrollCapture, OpenCaptureImage, OpenImageDialog, OpenSettings, _settings);
         MainWindow = _mainWindow;
 
         _tray = new TrayService(
@@ -54,7 +53,7 @@ public partial class App : Application
             StartRegionCapture,
             StartFullScreenCapture,
             StartScrollCapture,
-            Shutdown,
+            ExitApplication,
             _settings);
         _hotKeys = new HotKeyManager();
         _hotKeys.RegionCapturePressed += StartRegionCapture;
@@ -98,7 +97,7 @@ public partial class App : Application
                 if (overlay.IsCaptureAccepted && overlay.CapturedBitmap is not null)
                 {
                     CaptureSoundService.PlayShutter();
-                    OpenEditor(overlay.CapturedBitmap);
+                    OpenCaptureImage(overlay.CapturedBitmap);
                     _mainWindow?.RefreshHistory();
                 }
             }
@@ -118,7 +117,7 @@ public partial class App : Application
             {
                 var bitmap = ScreenCaptureService.CaptureAllScreens();
                 CaptureSoundService.PlayShutter();
-                OpenEditor(bitmap);
+                OpenCaptureImage(bitmap);
                 _mainWindow?.RefreshHistory();
             }
             catch (Exception exc)
@@ -142,7 +141,7 @@ public partial class App : Application
             var bounds = ScrollCaptureTarget.Resolve(overlay.SelectedScreenBounds);
             var (image, warning) = await ScrollCaptureService.CaptureAsync(bounds, overlay.SelectedScreenBounds);
             CaptureSoundService.PlayShutter();
-            OpenEditor(image);
+            OpenCaptureImage(image);
             _mainWindow?.RefreshHistory();
             if (warning is not null) MessageBox.Show(warning, "스크롤 캡처", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
@@ -156,6 +155,16 @@ public partial class App : Application
     private void ShowMainWindow()
     {
         Dispatcher.Invoke(() => _mainWindow?.ShowAndActivate());
+    }
+
+    private void ExitApplication()
+    {
+        if (_imageViewerWindow is not null)
+        {
+            _imageViewerWindow.Close();
+            if (_imageViewerWindow is not null) return;
+        }
+        Shutdown();
     }
 
     private void HandleActivationRequest(IReadOnlyList<string> arguments)
@@ -191,13 +200,7 @@ public partial class App : Application
     {
         try
         {
-            if (_imageViewerWindow is null)
-            {
-                _imageViewerWindow = new ImageViewerWindow((image, sourcePath) => OpenEditor(image, false, sourcePath));
-                _imageViewerWindow.Closed += (_, _) => _imageViewerWindow = null;
-            }
-
-            _imageViewerWindow.OpenImage(path, imagePaths);
+            EnsureImageViewer().OpenImage(path, imagePaths);
         }
         catch (Exception exc)
         {
@@ -208,6 +211,16 @@ public partial class App : Application
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }
+    }
+
+    private ImageViewerWindow EnsureImageViewer()
+    {
+        if (_imageViewerWindow is null)
+        {
+            _imageViewerWindow = new ImageViewerWindow(ShowMainWindow);
+            _imageViewerWindow.Closed += (_, _) => _imageViewerWindow = null;
+        }
+        return _imageViewerWindow;
     }
 
     private void OpenSettings()
@@ -244,7 +257,7 @@ public partial class App : Application
         _tray?.UpdateShortcuts(_settings);
     }
 
-    private void OpenEditor(System.Windows.Media.Imaging.BitmapSource bitmap, bool saveToHistory = true, string? historyFilePath = null)
+    private void OpenCaptureImage(System.Windows.Media.Imaging.BitmapSource bitmap, bool saveToHistory = true, string? historyFilePath = null)
     {
         if (saveToHistory)
         {
@@ -253,26 +266,11 @@ public partial class App : Application
 
         ClipboardService.TryCopyImage(bitmap);
 
-        if (_editorWindow is null)
+        if (historyFilePath is not null)
         {
-            _editorWindow = new EditorWindow(bitmap, ShowMainWindow, historyFilePath);
-            _editorWindow.Closed += (_, _) => _editorWindow = null;
-            _editorWindow.Show();
+            var paths = HistoryService.Load().Select(item => item.FilePath).ToList();
+            EnsureImageViewer().OpenImage(historyFilePath, paths, historyMode: true);
         }
-        else
-        {
-            _editorWindow.ReplaceImage(bitmap, historyFilePath);
-            if (!_editorWindow.IsVisible)
-            {
-                _editorWindow.Show();
-            }
-        }
-
-        _editorWindow.WindowState = WindowState.Normal;
-        _editorWindow.Topmost = true;
-        _editorWindow.Activate();
-        _editorWindow.Topmost = false;
-        _editorWindow.Focus();
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -280,7 +278,6 @@ public partial class App : Application
         _hotKeys?.Dispose();
         _tray?.Dispose();
         _singleInstance?.Dispose();
-        _editorWindow = null;
         _imageViewerWindow = null;
         _mainWindow = null;
         base.OnExit(e);

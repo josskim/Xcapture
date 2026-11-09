@@ -1,5 +1,5 @@
 #define MyAppName "XCapture"
-#define MyAppVersion "1.0.20"
+#define MyAppVersion "1.0.21"
 #define MyAppPublisher "XCapture"
 #define MyAppExeName "XCapture.exe"
 #define PublishDir "..\publish-latest"
@@ -30,7 +30,7 @@ Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional icons:"
 Name: "startup"; Description: "Run XCapture when Windows starts"; GroupDescription: "Additional options:"
-Name: "imageviewer"; Description: "이미지 파일 연결 프로그램과 우클릭 메뉴에 XCapture 등록"; GroupDescription: "이미지 뷰어:"; Flags: checkedonce
+Name: "imageviewer"; Description: "이미지 파일 연결 프로그램과 우클릭 메뉴에 XCapture 등록"; GroupDescription: "이미지 뷰어:"
 
 [Files]
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -77,3 +77,39 @@ Root: HKCU; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueN
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+var
+  ImageViewerDefaultApplied: Boolean;
+
+function HasTaskOverride: Boolean;
+var
+  I: Integer;
+  Arg: String;
+begin
+  Result := False;
+  for I := 1 to ParamCount do
+  begin
+    Arg := Uppercase(ParamStr(I));
+    if (Pos('/TASKS=', Arg) = 1) or (Pos('/MERGETASKS=', Arg) = 1) then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if (CurPageID = wpSelectTasks) and not ImageViewerDefaultApplied then
+  begin
+    if not HasTaskOverride then WizardSelectTasks('imageviewer');
+    ImageViewerDefaultApplied := True;
+  end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if (CurStep = ssInstall) and WizardSilent and not ImageViewerDefaultApplied and not HasTaskOverride then
+    WizardSelectTasks('imageviewer');
+end;

@@ -10,6 +10,7 @@
         AllowDrop="True"
         Drop="Window_Drop"
         DragOver="Window_DragOver"
+        Closing="Window_Closing"
         KeyDown="Window_KeyDown">
     <Window.Resources>
         <Style x:Key="ViewerButtonStyle" TargetType="Button">
@@ -55,11 +56,26 @@
             </Grid>
                 <WrapPanel Margin="0,8,0,0">
                     <Button Content="열기" Click="OpenButton_Click" Style="{StaticResource ViewerButtonStyle}"/>
-                    <Button Content="편집" Click="EditButton_Click" Style="{StaticResource ViewerButtonStyle}"/>
                     <Button Content="복사" Click="CopyButton_Click" Style="{StaticResource ViewerButtonStyle}"/>
+                    <Button Content="저장" Click="SaveButton_Click" Style="{StaticResource ViewerButtonStyle}"/>
+                    <Button Content="인쇄" Click="PrintButton_Click" Style="{StaticResource ViewerButtonStyle}"/>
                     <Button Content="이미지 합치기" Click="MergeButton_Click" Style="{StaticResource ViewerButtonStyle}"/>
                     <Button Content="크기·형식 변환" Click="ConvertButton_Click" Style="{StaticResource ViewerButtonStyle}"/>
-                    <Button Content="파일 위치" Click="OpenLocationButton_Click" Style="{StaticResource ViewerButtonStyle}" Margin="0"/>
+                    <Button Content="파일 위치" Click="OpenLocationButton_Click" Style="{StaticResource ViewerButtonStyle}"/>
+                    <Button Content="캡처 목록" Click="CaptureListButton_Click" Style="{StaticResource ViewerButtonStyle}" Margin="0"/>
+                </WrapPanel>
+                <WrapPanel Margin="0,8,0,0">
+                    <Button x:Name="ViewToolButton" Content="보기" Click="ViewToolButton_Click" Style="{StaticResource ViewerButtonStyle}"/>
+                    <Button x:Name="PenToolButton" Content="펜" Click="PenToolButton_Click" Style="{StaticResource ViewerButtonStyle}"/>
+                    <Button x:Name="EraserToolButton" Content="지우개" Click="EraserToolButton_Click" Style="{StaticResource ViewerButtonStyle}"/>
+                    <Button Background="#EF4444" Tag="#EF4444" ToolTip="빨강" Click="ColorButton_Click" Width="28" Height="28" Margin="0,3,6,3"/>
+                    <Button Background="#2563EB" Tag="#2563EB" ToolTip="파랑" Click="ColorButton_Click" Width="28" Height="28" Margin="0,3,6,3"/>
+                    <Button Background="#111827" Tag="#111827" ToolTip="검정" Click="ColorButton_Click" Width="28" Height="28" Margin="0,3,6,3"/>
+                    <Button Background="#FACC15" Tag="#FACC15" ToolTip="노랑" Click="ColorButton_Click" Width="28" Height="28" Margin="0,3,12,3"/>
+                    <TextBlock Text="굵기" Foreground="#F9FAFB" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <Slider x:Name="StrokeSlider" Width="100" Minimum="2" Maximum="18" Value="4" VerticalAlignment="Center" Margin="0,0,12,0" ValueChanged="StrokeSlider_ValueChanged"/>
+                    <Button Content="되돌리기" Click="UndoButton_Click" Style="{StaticResource ViewerButtonStyle}"/>
+                    <Button Content="초기화" Click="ClearButton_Click" Style="{StaticResource ViewerButtonStyle}"/>
                 </WrapPanel>
             </StackPanel>
         </Border>
@@ -111,6 +127,7 @@
                            SnapsToDevicePixels="True"
                            RenderOptions.BitmapScalingMode="HighQuality"/>
                 </Border>
+                <InkCanvas x:Name="InkLayer" Background="Transparent" IsHitTestVisible="False" EditingMode="None" ContextMenu="{StaticResource ImageContextMenu}"/>
             </Grid>
         </ScrollViewer>
     </DockPanel>

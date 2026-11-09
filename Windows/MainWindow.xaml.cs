@@ -13,7 +13,7 @@ public partial class MainWindow : Window
     private readonly Action _regionCapture;
     private readonly Action _fullScreenCapture;
     private readonly Action _scrollCapture;
-    private readonly Action<BitmapSource, bool, string?> _openEditor;
+    private readonly Action<BitmapSource, bool, string?> _openCaptureImage;
     private readonly Action _openImageDialog;
     private readonly Action _openSettings;
 
@@ -23,7 +23,7 @@ public partial class MainWindow : Window
         Action regionCapture,
         Action fullScreenCapture,
         Action scrollCapture,
-        Action<BitmapSource, bool, string?> openEditor,
+        Action<BitmapSource, bool, string?> openCaptureImage,
         Action openImageDialog,
         Action openSettings,
         AppSettings settings)
@@ -32,7 +32,7 @@ public partial class MainWindow : Window
         _regionCapture = regionCapture;
         _fullScreenCapture = fullScreenCapture;
         _scrollCapture = scrollCapture;
-        _openEditor = openEditor;
+        _openCaptureImage = openCaptureImage;
         _openImageDialog = openImageDialog;
         _openSettings = openSettings;
         DataContext = this;
@@ -153,7 +153,7 @@ public partial class MainWindow : Window
     private void OpenHistory(CaptureHistoryItem item)
     {
         var image = HistoryService.LoadImage(item.FilePath);
-        _openEditor(image, false, item.FilePath);
+        _openCaptureImage(image, false, item.FilePath);
     }
 
     private void Window_Closing(object sender, CancelEventArgs e)

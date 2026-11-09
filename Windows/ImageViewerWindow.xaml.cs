@@ -22,7 +22,8 @@ public partial class ImageViewerWindow : Window
     private const double MaxZoom = 8.0;
     private const double ZoomStep = 1.2;
 
-    private readonly Action<BitmapSource, string?> _editImage;
+    private readonly Action _showMainWindow;
+    private bool _historyMode;
     private IReadOnlyList<string> _imagePaths = [];
     private int _currentIndex = -1;
     private BitmapSource? _currentImage;
@@ -31,19 +32,22 @@ public partial class ImageViewerWindow : Window
     private double _displayWidth = 1.0;
     private double _displayHeight = 1.0;
 
-    public ImageViewerWindow(Action<BitmapSource, string?> editImage)
+    public ImageViewerWindow(Action showMainWindow)
     {
         InitializeComponent();
-        _editImage = editImage;
+        _showMainWindow = showMainWindow;
+        InitializeEditing();
     }
 
-    public void OpenImage(string path, IReadOnlyList<string>? requestedImages = null)
+    public bool OpenImage(string path, IReadOnlyList<string>? requestedImages = null, bool historyMode = false)
     {
+        if (!ConfirmDiscardOrSave()) return false;
         var normalized = ImageFileService.NormalizePath(path);
         var candidates = requestedImages is { Count: > 0 }
             ? ImageFileService.NormalizeExistingImages(requestedImages)
             : ImageFileService.LoadDirectoryImages(normalized);
 
+        var image = ImageFileService.LoadImage(normalized);
         _imagePaths = candidates.Contains(normalized, StringComparer.OrdinalIgnoreCase)
             ? candidates
             : [normalized];
@@ -53,8 +57,10 @@ public partial class ImageViewerWindow : Window
             _currentIndex = 0;
         }
 
-        LoadCurrentImage();
+        _historyMode = historyMode;
+        SetCurrentImage(image, normalized);
         ShowAndActivate();
+        return true;
     }
 
     public void ShowAndActivate()
@@ -71,38 +77,25 @@ public partial class ImageViewerWindow : Window
         Focus();
     }
 
-    private void LoadCurrentImage()
+    private void SetCurrentImage(BitmapSource image, string path)
     {
-        if (_currentIndex < 0 || _currentIndex >= _imagePaths.Count)
-        {
-            return;
-        }
-
-        var path = _imagePaths[_currentIndex];
-        try
-        {
-            _currentImage = ImageFileService.LoadImage(path);
-            ViewerImage.Source = _currentImage;
-            UpdateDisplaySize();
-            _fitToWindow = true;
-            FitImageToWindow();
-            UpdateMetadata(path);
-        }
-        catch (Exception exc)
-        {
-            LogService.Error(exc, $"Failed to open image viewer file: {path}");
-            MessageBox.Show(this, $"이미지를 열 수 없습니다.\n\n{path}", "XCapture 이미지 뷰어", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
+        ResetEditing();
+        _currentImage = image;
+        ViewerImage.Source = image;
+        UpdateDisplaySize();
+        _fitToWindow = true;
+        FitImageToWindow();
+        UpdateMetadata(path);
     }
 
     private void UpdateMetadata(string path)
     {
         var file = new FileInfo(path);
         FileNameText.Text = file.Name;
-        Title = $"{file.Name} - XViewer";
+        Title = $"{file.Name}{(_hasUnsavedEdits ? " *" : "")} - XViewer";
         ImageInfoText.Text = _currentImage is null
             ? file.FullName
-            : $"{_currentImage.PixelWidth:N0} × {_currentImage.PixelHeight:N0} · {FormatFileSize(file.Length)} · {file.FullName}";
+            : $"{_currentImage.PixelWidth:N0} × {_currentImage.PixelHeight:N0} · {(file.Exists ? FormatFileSize(file.Length) : "파일 없음")} · {file.FullName}";
         PositionText.Text = _imagePaths.Count > 0 ? $"{_currentIndex + 1} / {_imagePaths.Count}" : "";
         PreviousButton.IsEnabled = _currentIndex > 0;
         NextButton.IsEnabled = _currentIndex >= 0 && _currentIndex < _imagePaths.Count - 1;
@@ -133,14 +126,29 @@ public partial class ImageViewerWindow : Window
 
     private void Navigate(int offset)
     {
+        if (_historyMode)
+        {
+            var current = _currentIndex >= 0 && _currentIndex < _imagePaths.Count ? _imagePaths[_currentIndex] : null;
+            var fresh = HistoryService.Load().Select(item => item.FilePath).ToList();
+            var currentIndex = current is null ? -1 : fresh.FindIndex(p => string.Equals(p, current, StringComparison.OrdinalIgnoreCase));
+            if (currentIndex >= 0) { _imagePaths = fresh; _currentIndex = currentIndex; }
+        }
         var target = _currentIndex + offset;
         if (target < 0 || target >= _imagePaths.Count)
         {
             return;
         }
 
+        if (!ConfirmDiscardOrSave()) return;
+        var previousIndex = _currentIndex;
         _currentIndex = target;
-        LoadCurrentImage();
+        try { SetCurrentImage(ImageFileService.LoadImage(_imagePaths[target]), _imagePaths[target]); }
+        catch (Exception exc)
+        {
+            _currentIndex = previousIndex;
+            LogService.Error(exc, "Failed to navigate image");
+            MessageBox.Show(this, "이미지를 열 수 없습니다.", "XViewer", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void OpenButton_Click(object sender, RoutedEventArgs e)
@@ -157,19 +165,11 @@ public partial class ImageViewerWindow : Window
         }
     }
 
-    private void EditButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_currentImage is not null && _currentIndex >= 0)
-        {
-            _editImage(_currentImage, _imagePaths[_currentIndex]);
-        }
-    }
-
     private void CopyButton_Click(object sender, RoutedEventArgs e)
     {
         if (_currentImage is not null)
         {
-            ClipboardService.TryCopyImage(_currentImage);
+            ClipboardService.TryCopyImage(RenderEditedImage());
         }
     }
 
@@ -220,7 +220,7 @@ public partial class ImageViewerWindow : Window
     private void ConvertButton_Click(object sender, RoutedEventArgs e)
     {
         if (_currentImage is null) return;
-        var dialog = new ImageConvertWindow(_currentImage, _imagePaths[_currentIndex]) { Owner = this };
+        var dialog = new ImageConvertWindow(RenderEditedImage(), _imagePaths[_currentIndex]) { Owner = this };
         dialog.ShowDialog();
     }
 
@@ -294,6 +294,8 @@ public partial class ImageViewerWindow : Window
         ImageSurface.Height = _displayHeight;
         ViewerImage.Width = _displayWidth;
         ViewerImage.Height = _displayHeight;
+        InkLayer.Width = _displayWidth;
+        InkLayer.Height = _displayHeight;
     }
 
     private void FitImageToWindow()
@@ -318,12 +320,12 @@ public partial class ImageViewerWindow : Window
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Left)
+        if (e.Key == Key.Left && Keyboard.Modifiers == ModifierKeys.None && Keyboard.FocusedElement is not System.Windows.Controls.Slider)
         {
             Navigate(-1);
             e.Handled = true;
         }
-        else if (e.Key == Key.Right)
+        else if (e.Key == Key.Right && Keyboard.Modifiers == ModifierKeys.None && Keyboard.FocusedElement is not System.Windows.Controls.Slider)
         {
             Navigate(1);
             e.Handled = true;
@@ -341,6 +343,21 @@ public partial class ImageViewerWindow : Window
         else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.C)
         {
             CopyButton_Click(sender, e);
+            e.Handled = true;
+        }
+        else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.S)
+        {
+            SaveEditedImage();
+            e.Handled = true;
+        }
+        else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.P)
+        {
+            PrintButton_Click(sender, e);
+            e.Handled = true;
+        }
+        else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z)
+        {
+            UndoButton_Click(sender, e);
             e.Handled = true;
         }
         else if (e.Key == Key.Add || e.Key == Key.OemPlus)
