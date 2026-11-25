@@ -7,7 +7,7 @@ Simple Windows screen capture tool.
 - Region capture: `Ctrl+Shift+S` by default
 - Region capture freezes the screen first, preserving open browser menus and popups
 - Full screen capture: `Ctrl+Shift+A` by default
-- Scroll capture: `Ctrl+Shift+D` by default; select a Chrome or Edge page and XCapture captures the full visible page width from top to bottom
+- Scroll capture: `Ctrl+Shift+D` by default; select a wide Chrome or Edge page for full-page capture, or select a chat/list panel to capture its internal scroll area
 - Customizable global capture shortcuts
 - Main window on app launch
 - Recent capture history: latest 50 images

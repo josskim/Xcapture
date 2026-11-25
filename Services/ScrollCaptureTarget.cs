@@ -6,7 +6,7 @@ namespace XCapture.Services;
 
 public static class ScrollCaptureTarget
 {
-    public static Rectangle Resolve(Rectangle selected)
+    public static ScrollCaptureTargetInfo Resolve(Rectangle selected)
     {
         var point = new NativePoint { X = selected.Left + selected.Width / 2, Y = selected.Top + selected.Height / 2 };
         var hit = WindowFromPoint(point);
@@ -29,8 +29,30 @@ public static class ScrollCaptureTarget
         var screen = System.Windows.Forms.Screen.FromPoint(new System.Drawing.Point(point.X, point.Y));
         viewport = Rectangle.Intersect(viewport, screen.Bounds);
         if (viewport.Width < 100 || viewport.Height < 100) throw new InvalidOperationException("브라우저 페이지 영역이 화면 밖에 있습니다.");
+
+        var selectedViewport = Rectangle.Intersect(selected, viewport);
+        if (selectedViewport.Width < 40 || selectedViewport.Height < 40)
+            throw new InvalidOperationException("스크롤할 영역이 브라우저 페이지 안에 충분히 포함되지 않았습니다.");
+
+        // A narrow selection is usually an independently scrolling chat/list panel.
+        // A wide selection keeps the original page mode and captures the browser
+        // viewport from top to bottom, as requested for ordinary web pages.
+        var useSelectedRegion = IsLikelyInnerScrollRegion(selectedViewport, viewport);
+        var captureBounds = useSelectedRegion ? selectedViewport : viewport;
         SetForegroundWindow(root);
-        return viewport;
+        return new ScrollCaptureTargetInfo(
+            captureBounds,
+            new System.Drawing.Point(
+                selectedViewport.Left + selectedViewport.Width / 2,
+                selectedViewport.Top + selectedViewport.Height / 2),
+            useSelectedRegion);
+    }
+
+    private static bool IsLikelyInnerScrollRegion(Rectangle selected, Rectangle viewport)
+    {
+        var widthRatio = selected.Width / (double)viewport.Width;
+        var heightRatio = selected.Height / (double)viewport.Height;
+        return widthRatio < 0.72 || heightRatio < 0.42;
     }
 
     private static string ClassName(IntPtr window)
@@ -50,3 +72,8 @@ public static class ScrollCaptureTarget
     [DllImport("user32.dll")] private static extern bool GetWindowRect(IntPtr window, out NativeRect rect);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetClassName(IntPtr window, StringBuilder text, int length);
 }
+
+public sealed record ScrollCaptureTargetInfo(
+    Rectangle CaptureBounds,
+    System.Drawing.Point ScrollPoint,
+    bool UsesSelectedRegion);

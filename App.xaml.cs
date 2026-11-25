@@ -138,8 +138,8 @@ public partial class App : Application
             overlay.ShowDialog();
             if (!overlay.IsCaptureAccepted) return;
             await Task.Delay(350);
-            var bounds = ScrollCaptureTarget.Resolve(overlay.SelectedScreenBounds);
-            var (image, warning) = await ScrollCaptureService.CaptureAsync(bounds, overlay.SelectedScreenBounds);
+            var target = ScrollCaptureTarget.Resolve(overlay.SelectedScreenBounds);
+            var (image, warning) = await ScrollCaptureService.CaptureAsync(target.CaptureBounds, target.ScrollPoint);
             CaptureSoundService.PlayShutter();
             OpenCaptureImage(image);
             _mainWindow?.RefreshHistory();

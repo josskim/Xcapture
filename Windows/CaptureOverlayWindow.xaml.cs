@@ -22,7 +22,7 @@ public partial class CaptureOverlayWindow : Window
     {
         _snapshot = snapshot;
         InitializeComponent();
-        if (scrollCapture) InstructionText.Text = "Chrome 또는 Edge의 스크롤할 페이지 안쪽을 드래그하세요. 페이지 전체 너비를 캡처합니다. Esc: 취소";
+        if (scrollCapture) InstructionText.Text = "페이지 전체는 본문을 넓게, 채팅·목록은 해당 영역을 드래그하세요. Esc: 취소";
         SnapshotImage.Source = snapshot;
 
         Loaded += (_, _) =>
