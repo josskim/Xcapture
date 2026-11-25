@@ -28,16 +28,33 @@ public static class ScrollCaptureService
         for (var page = 0; page < 500; page++)
         {
             ScrollWheel(unchecked((uint)-120));
-            await Task.Delay(650);
+            await Task.Delay(220);
             var next = ScreenCaptureService.CaptureRectangle(bounds);
             if (FramesMatch(frames[^1].Image, next))
             {
-                if (frames.Count == 1) warning = "스크롤로 화면이 이동하지 않았습니다. 스크롤 가능한 내용 영역을 선택했는지 확인해주세요.";
-                break;
+                // Smooth scrolling and delayed rendering may leave the first frame unchanged.
+                for (var retry = 0; retry < 3 && FramesMatch(frames[^1].Image, next); retry++)
+                {
+                    ScrollWheel(unchecked((uint)-120));
+                    await Task.Delay(300);
+                    next = ScreenCaptureService.CaptureRectangle(bounds);
+                }
+                if (FramesMatch(frames[^1].Image, next))
+                {
+                    if (frames.Count == 1) warning = "스크롤로 화면이 이동하지 않았습니다. 스크롤 가능한 내용 영역을 선택했는지 확인해주세요.";
+                    break;
+                }
             }
 
             var overlap = FindOverlap(frames[^1].Image, next);
-            if (overlap < 0)
+            if (overlap < 0 || overlap >= next.PixelHeight)
+            {
+                // Give smooth scrolling or lazy-loaded content time to settle before stopping.
+                await Task.Delay(500);
+                next = ScreenCaptureService.CaptureRectangle(bounds);
+                overlap = FindOverlap(frames[^1].Image, next);
+            }
+            if (overlap < 0 || overlap >= next.PixelHeight)
             {
                 warning = "스크롤 화면의 겹치는 부분을 확인할 수 없어 여기까지 캡처했습니다. 고정 메뉴나 스크롤바를 제외하고 다시 선택해 보세요.";
                 break;
@@ -85,8 +102,8 @@ public static class ScrollCaptureService
         a.CopyPixels(pixelsA, stride, 0);
         b.CopyPixels(pixelsB, stride, 0);
         if (FramesMatch(previous, next)) return height;
-        var xStep = Math.Max(1, width / 96);
-        var yStep = Math.Max(1, height / 140);
+        var xStep = Math.Max(1, width / 64);
+        var yStep = Math.Max(1, height / 90);
         var minOverlap = Math.Max(24, height / 8);
         var edgeSkip = Math.Min(80, Math.Max(8, height / 12));
         var bestOverlap = -1;
@@ -97,8 +114,6 @@ public static class ScrollCaptureService
             long difference = 0;
             var matches = 0;
             var count = 0;
-            var min = 255;
-            var max = 0;
             var firstY = Math.Min(edgeSkip, overlap / 4);
             var lastY = overlap - firstY;
             for (var y = firstY; y < lastY; y += yStep)
@@ -111,13 +126,11 @@ public static class ScrollCaptureService
                     var pixelDifference = PixelDifference(pixelsA, pixelsB, ia, ib);
                     difference += pixelDifference;
                     if (pixelDifference <= 30) matches++;
-                    min = Math.Min(min, pixelsA[ia]);
-                    max = Math.Max(max, pixelsA[ia]);
                     count++;
                 }
             }
 
-            if (count < 120 || max - min < 24) continue;
+            if (count < 120) continue;
             var meanDifference = difference / (double)count;
             var matchRatio = matches / (double)count;
             var score = meanDifference + (1 - matchRatio) * 30;
