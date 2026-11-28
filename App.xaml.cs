@@ -269,7 +269,11 @@ public partial class App : Application
         if (historyFilePath is not null)
         {
             var paths = HistoryService.Load().Select(item => item.FilePath).ToList();
-            EnsureImageViewer().OpenImage(historyFilePath, paths, historyMode: true);
+            EnsureImageViewer().OpenImage(
+                historyFilePath,
+                paths,
+                historyMode: true,
+                discardUnsavedEdits: true);
         }
     }
 

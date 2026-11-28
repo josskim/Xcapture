@@ -39,9 +39,13 @@ public partial class ImageViewerWindow : Window
         InitializeEditing();
     }
 
-    public bool OpenImage(string path, IReadOnlyList<string>? requestedImages = null, bool historyMode = false)
+    public bool OpenImage(
+        string path,
+        IReadOnlyList<string>? requestedImages = null,
+        bool historyMode = false,
+        bool discardUnsavedEdits = false)
     {
-        if (!ConfirmDiscardOrSave()) return false;
+        if (!discardUnsavedEdits && !ConfirmDiscardOrSave()) return false;
         var normalized = ImageFileService.NormalizePath(path);
         var candidates = requestedImages is { Count: > 0 }
             ? ImageFileService.NormalizeExistingImages(requestedImages)
